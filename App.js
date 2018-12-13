@@ -516,7 +516,7 @@ class HomeScreen extends React.Component {
         const itemId = circleDetails[i].id;
         const itemTitle = circleDetails[i].title;
         const itemAddress = circleDetails[i].relative_address;
-        const itemIconAddress = circleDetails[i].icon_address;
+        const itemIconAddress = circleDetails[i].icon;
         CircleButtons.push(
           <View key={i} style={styles.circleButtonRowView}>
             <CircleButton onPress={() => this.navigate(itemId, itemTitle, itemAddress)}
@@ -529,7 +529,7 @@ class HomeScreen extends React.Component {
         const itemId1 = circleDetails[i].id;
         const itemTitle1 = circleDetails[i].title;
         const itemAddress1 = circleDetails[i].relative_address;
-        const itemIconAddress1 = circleDetails[i].icon_address;
+        const itemIconAddress1 = circleDetails[i].icon;
         let itemId2 = 0;
         let itemTitle2 = 'None';
         let itemAddress2 = '';
@@ -538,7 +538,7 @@ class HomeScreen extends React.Component {
           itemId2 = circleDetails[i + 1].id;
           itemTitle2 = circleDetails[i + 1].title;
           itemAddress2 = circleDetails[i + 1].relative_address;
-          itemIconAddress2 = circleDetails[i + 1].icon_address;
+          itemIconAddress2 = circleDetails[i + 1].icon;
         }
         CircleButtons.push(
           <View key={i} style={styles.circleButtonRowView}>
@@ -554,7 +554,7 @@ class HomeScreen extends React.Component {
         const itemId1 = circleDetails[i].id;
         const itemTitle1 = circleDetails[i].title;
         const itemAddress1 = circleDetails[i].relative_address;
-        const itemIconAddress1 = circleDetails[i].icon_address;
+        const itemIconAddress1 = circleDetails[i].icon;
         let itemId2 = 0;
         let itemTitle2 = 'None';
         let itemAddress2 = '';
@@ -568,13 +568,13 @@ class HomeScreen extends React.Component {
           itemId2 = circleDetails[i + 1].id;
           itemTitle2 = circleDetails[i + 1].title;
           itemAddress2 = circleDetails[i + 1].relative_address;
-          itemIconAddress2 = circleDetails[i + 1].icon_address;
+          itemIconAddress2 = circleDetails[i + 1].icon;
         }
         if (circleDetails[i + 2]) {
           itemId3 = circleDetails[i + 2].id;
           itemTitle3 = circleDetails[i + 2].title;
           itemAddress3 = circleDetails[i + 2].relative_address;
-          itemIconAddress3 = circleDetails[i + 2].icon_address;
+          itemIconAddress3 = circleDetails[i + 2].icon;
         }
 
         CircleButtons.push(
@@ -761,13 +761,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignContent: 'center'
   },
-  CircleShapeView: {
-    width: 100,
-    height: 100,
-    borderRadius: 100 / 2,
-    margin: 20,
-    // backgroundColor: '#15db51'
-  },
   circleButton: {
     alignItems: 'center',
     backgroundColor: '#83a7a8',//'#15db51',
@@ -780,7 +773,7 @@ const styles = StyleSheet.create({
   },
   circleButtonView: {
     alignItems: 'center',
-    maxWidth: widthWin / 4,
+    maxWidth: widthWin /5,
   },
   circleButtonCaption: {
     alignSelf: 'center',
