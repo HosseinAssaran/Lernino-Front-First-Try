@@ -1,4 +1,4 @@
-package com.lerninocomputer;
+package com.lernino;
 
 import android.app.Application;
 
