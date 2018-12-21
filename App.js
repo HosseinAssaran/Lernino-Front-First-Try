@@ -426,6 +426,7 @@ class LessonsScreen extends React.Component {
 
   componentWillUnmount() {
     let itemId = this.props.navigation.getParam('itemId', 0);
+    let lessonsCount = this.props.navigation.getParam('itemLessonsCount', 0);
     if (coursesIdPassed.indexOf(itemId) === -1) {
       let coursePassed = false;
       let countLessonPassed = 0;
@@ -434,7 +435,7 @@ class LessonsScreen extends React.Component {
           countLessonPassed++;
         }
       }
-      if (countLessonPassed === this.state.data.length && this.state.data.length != 0) {
+      if (countLessonPassed === lessonsCount && lessonsCount != 0) {//this.state.data.length && this.state.data.length != 0) {
         coursePassed = true;
         Alert.alert('تبریک!', 'شما این دوره رو با موفقیت گذروندید.');
       }
@@ -517,9 +518,10 @@ class HomeScreen extends React.Component {
         const itemTitle = circleDetails[i].title;
         const itemAddress = circleDetails[i].relative_address;
         const itemIconAddress = circleDetails[i].icon;
+        const itemLessonsCount = circleDetails[i].lessons_count;
         CircleButtons.push(
           <View key={i} style={styles.circleButtonRowView}>
-            <CircleButton onPress={() => this.navigate(itemId, itemTitle, itemAddress)}
+            <CircleButton onPress={() => this.navigate(itemId, itemTitle, itemAddress, itemLessonsCount)}
               value={baseAddress + itemIconAddress} caption={itemTitle} id={i} itemId={itemId} />
           </View>
         );
@@ -530,21 +532,24 @@ class HomeScreen extends React.Component {
         const itemTitle1 = circleDetails[i].title;
         const itemAddress1 = circleDetails[i].relative_address;
         const itemIconAddress1 = circleDetails[i].icon;
+        const itemLessonsCount1 = circleDetails[i].lessons_count;
         let itemId2 = 0;
         let itemTitle2 = 'None';
         let itemAddress2 = '';
         let itemIconAddress2 = null;
+        let itemLessonsCount2 = 0;
         if (circleDetails[i + 1]) {
           itemId2 = circleDetails[i + 1].id;
           itemTitle2 = circleDetails[i + 1].title;
           itemAddress2 = circleDetails[i + 1].relative_address;
           itemIconAddress2 = circleDetails[i + 1].icon;
+          itemLessonsCount2 = circleDetails[i + 1].lessons_count;
         }
         CircleButtons.push(
           <View key={i} style={styles.circleButtonRowView}>
-            <CircleButton onPress={() => this.navigate(itemId1, itemTitle1, itemAddress1)}
+            <CircleButton onPress={() => this.navigate(itemId1, itemTitle1, itemAddress1, itemLessonsCount1)}
               value={baseAddress + itemIconAddress1} caption={itemTitle1} id={i} itemId={itemId1} />
-            <CircleButton onPress={() => this.navigate(itemId2, itemTitle2, itemAddress2)}
+            <CircleButton onPress={() => this.navigate(itemId2, itemTitle2, itemAddress2, itemLessonsCount2)}
               value={baseAddress + itemIconAddress2} caption={itemTitle2} id={i} itemId={itemId2} />
           </View>
         );
@@ -555,35 +560,40 @@ class HomeScreen extends React.Component {
         const itemTitle1 = circleDetails[i].title;
         const itemAddress1 = circleDetails[i].relative_address;
         const itemIconAddress1 = circleDetails[i].icon;
+        const itemLessonsCount1 = circleDetails[i].lessons_count;
         let itemId2 = 0;
         let itemTitle2 = 'None';
         let itemAddress2 = '';
         let itemIconAddress2 = null;
+        let itemLessonsCount2 = 0;        
         let itemId3 = 0;
         let itemTitle3 = 'None';
         let itemAddress3 = '';
         let itemIconAddress3 = null;
+        let itemLessonsCount3 = 0;        
 
         if (circleDetails[i + 1]) {
           itemId2 = circleDetails[i + 1].id;
           itemTitle2 = circleDetails[i + 1].title;
           itemAddress2 = circleDetails[i + 1].relative_address;
           itemIconAddress2 = circleDetails[i + 1].icon;
+          itemLessonsCount2 = circleDetails[i + 1].lessons_count;
         }
         if (circleDetails[i + 2]) {
           itemId3 = circleDetails[i + 2].id;
           itemTitle3 = circleDetails[i + 2].title;
           itemAddress3 = circleDetails[i + 2].relative_address;
           itemIconAddress3 = circleDetails[i + 2].icon;
+          itemLessonsCount3 = circleDetails[i + 2].lessons_count;          
         }
 
         CircleButtons.push(
           <View key={i} style={styles.circleButtonRowView}>
-            <CircleButton onPress={() => this.navigate(itemId1, itemTitle1, itemAddress1)}
+            <CircleButton onPress={() => this.navigate(itemId1, itemTitle1, itemAddress1,itemLessonsCount1)}
               value={baseAddress + itemIconAddress1} caption={itemTitle1} id={i} itemId={itemId1} />
-            <CircleButton onPress={() => this.navigate(itemId2, itemTitle2, itemAddress2)}
+            <CircleButton onPress={() => this.navigate(itemId2, itemTitle2, itemAddress2, itemLessonsCount2)}
               value={baseAddress + itemIconAddress2} caption={itemTitle2} id={i} itemId={itemId2} />
-            <CircleButton onPress={() => this.navigate(itemId3, itemTitle3, itemAddress3)}
+            <CircleButton onPress={() => this.navigate(itemId3, itemTitle3, itemAddress3, itemLessonsCount3)}
               value={baseAddress + itemIconAddress3} caption={itemTitle3} id={i} itemId={itemId3} />
           </View>
         );
@@ -614,11 +624,12 @@ class HomeScreen extends React.Component {
     // Alert.alert('course is paseed.')
   }
 
-  navigate = (itemId, itemTitle, itemAddress) => {
+  navigate = (itemId, itemTitle, itemAddress, itemLessonsCount) => {
     this.props.navigation.push('Lessons', {
       itemId: itemId,
       itemTitle: itemTitle,
       itemAddress: itemAddress,
+      itemLessonsCount: itemLessonsCount,
       refresh: this._rerender,
     })
   }
