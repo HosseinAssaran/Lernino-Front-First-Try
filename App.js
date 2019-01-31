@@ -7,9 +7,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 
 
-const baseAddress = 'http://rest.lernino.com';
-// const baseAddress = 'http://192.168.43.78:8000';
-const masterRelativeAddress = '/api/schools/1'
+//const baseAddress = 'http://rest.lernino.com';
+const baseAddress = 'http://192.168.43.78:8000';
+const masterRelativeAddress = '/api/schools/2'
 const widthWin = Dimensions.get('window').width
 const heightWin = Dimensions.get('window').height
 
@@ -59,7 +59,7 @@ function SquareButton(props) {
   return (
     <View>
       <TouchableOpacity
-        style={[styles.squareButton, lessonsIdPassed.indexOf(props.itemId) === -1 ? {} : { backgroundColor: '#20ba0e' }]}
+        style={[styles.squareButton, lessonsIdPassed.indexOf(props.itemId) === -1 ? {} : { backgroundColor: '#3cb26f' }]}
         onPress={props.onPress}
       >
         <Text style={styles.squareButtonCaption}>{props.itemTitle}</Text>
@@ -221,6 +221,11 @@ class PartsScreen extends React.Component {
   }
   static navigationOptions = ({ navigation }) => {
     return {
+      headerTitleStyle: {
+        fontSize: 18,
+        fontFamily: 'Vazir Medium',
+        fontWeight: '200',
+      },
       title: navigation.getParam('itemTitle', 'بدون عنوان'),
     };
   };
@@ -292,7 +297,7 @@ class PartsScreen extends React.Component {
               {successfulLoad ?
                 <Text style={styles.errorText}>
                   {/* {this.state.data.toString} */}
-                  محتوایی برای این درس نداریم
+                  برای این درس هنوز محتوایی تهیه نشده است. از شکیبایی شما سپاسگزاریم.
                 </Text>
                 :
                 <View>
@@ -478,7 +483,7 @@ class LessonsScreen extends React.Component {
               : successfulLoad ?
                 <View style={styles.errorView}>
                   <Text style={styles.errorText}>
-                    دروس این دوره هنوز تهیه نشده است.
+                    دروس این دوره هنوز تهیه نشده است. از شکیبایی شما سپاسگزاریم.
                 </Text>
                 </View>
                 :
@@ -711,11 +716,11 @@ class HomeScreen extends React.Component {
                 />
               </View>}
           </ScrollView>
-          <View style={{ backgroundColor: '#607c3a' }}>
+          {/* <View style={{ backgroundColor: '#607c3a' }}>
             <Text style={styles.infoText}>
               کاری از گروه نرم افزاری فیبوک رایانه
           </Text>
-          </View>
+          </View> */}
         </View>
       );
   }
@@ -733,12 +738,12 @@ const RootStack = createStackNavigator(
     headerLayoutPreset: 'center',
     navigationOptions: {
       headerStyle: {
-        backgroundColor: '#607c3a',//'#72cdff',
+        backgroundColor: '#4c6d66',//'#72cdff',
       },
       headerTintColor: '#d1efa7',
       headerTitleStyle: {
         // fontWeight: 'bold',
-        fontSize: 25,
+        fontSize: 20,
         fontFamily: 'Vazir Medium',
         fontWeight: '200',
       },
@@ -772,6 +777,10 @@ const styles = StyleSheet.create({
     width: '100%',
     alignContent: 'center'
   },
+  contentScrollView: {
+    //flexGrow: 1,
+    paddingVertical: 10,
+  },
   circleButton: {
     alignItems: 'center',
     backgroundColor: '#83a7a8',//'#15db51',
@@ -804,7 +813,7 @@ const styles = StyleSheet.create({
   },
   squareButton: {
     alignItems: 'center',
-    backgroundColor: '#607c3a',
+    backgroundColor: '#4c6d66',
     justifyContent: 'center',
     width: 150,
     height: 150,
@@ -825,10 +834,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-evenly'
   },
-  contentScrollView: {
-    flexGrow: 1,
-    paddingVertical: 10,
-  },
+
   card: {
     backgroundColor: "#fff",
     paddingVertical: 20,
