@@ -40,7 +40,7 @@ function CircleButton(props) {
   return (
     <View style={styles.circleButtonView}>
       <TouchableOpacity
-        style={[styles.circleButton, coursesIdPassed.indexOf(props.itemId) === -1 ? null : { backgroundColor: '#15db51' }]}
+        style={[styles.circleButton, coursesIdPassed.indexOf(props.itemId) === -1 ? null : { backgroundColor: '#3cb26f' }]}
         onPress={props.onPress}
       >
         <Image
@@ -73,7 +73,7 @@ class LogoTitle extends React.Component {
     return (
       <View style={styles.header}>
         <Text style={styles.headerText}
-        >آموزش کامپیوتر (لرنینو)</Text>
+        >مدرسه کامپیوتر لرنینو</Text>
       </View>
     );
   }
