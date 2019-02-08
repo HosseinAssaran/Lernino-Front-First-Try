@@ -7,9 +7,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 
 
-//const baseAddress = 'http://rest.lernino.com';
-const baseAddress = 'http://192.168.43.78:8000';
-const masterRelativeAddress = '/api/schools/2'
+const baseAddress = 'http://rest.lernino.com';
+//const baseAddress = 'http://192.168.1.102:8000';
+const masterRelativeAddress = '/api/schools/1'
 const widthWin = Dimensions.get('window').width
 const heightWin = Dimensions.get('window').height
 
@@ -22,7 +22,7 @@ function fetchData(address) {
         }
         else {
           // return reject(new Error(`متاسفانه اشتباهی رخ داده ممنون میشیم به بهمون اطلاع بدهید.\n- (${response.status}).`));
-          return reject(`متاسفانه اشتباهی رخ داده ممنون میشیم بهمون اطلاع بدهید.\n (${response.status})`);
+          return reject(`متاسفانه اشتباهی رخ داده ممنون میشیم درصورت استفاده از آخرین نسخه بهمون اطلاع بدهید.\n (${response.status})`);
           //reject(response.json.meta.error);
         }
       })
@@ -161,7 +161,7 @@ class TabInParts extends React.Component {
 
   _renderIcon = ({ route }) => (
     <Icon style={{ transform: [{ scaleX: I18nManager.isRTL ? -1 : 1 }] }}
-      name={route.icon} size={18}
+      name={route.icon} size={16}
       color="white"
     />
   );
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white'
   },
   tabBar: {
-    height: 35,
+    height: 28,
   },
   tabBarWithTitle: {
     height: 'auto',
