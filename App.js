@@ -4,6 +4,8 @@ import { createStackNavigator, NavigationEvents } from 'react-navigation';
 import { TabView, TabBar } from 'react-native-tab-view';
 // import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { WebView } from "react-native-webview";
+
 
 
 
@@ -78,12 +80,69 @@ class LogoTitle extends React.Component {
     );
   }
 }
+const embedHtml = (content) => 
+{
+  var html = content.replace(/\r\n/g, "<br/>");
+  return(`
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <style type="text/css">
+  @font-face {
+  font-family: "Vazir"; 
+  src:url("file:///android_asset/fonts/Vazir Medium.ttf");
+  }
+  body {
+    text-align: justify;
+    direction : rtl;
+    font-family: Vazir;
+}
+body, html, #height-calculator {
+    margin: 0;
+    padding: 0;
+}
+#height-calculator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+  </style>
+  </head>
+  <body>
+  ${html}
+  </body>
+  <script>
+  ;(function() {
+    var wrapper = document.createElement("div");
+    wrapper.id = "height-wrapper";
+    while (document.body.firstChild) {
+        wrapper.appendChild(document.body.firstChild);
+    }
+    document.body.appendChild(wrapper);
+    var i = 0;
+    function updateHeight() {
+        document.title = wrapper.clientHeight;
+        window.location.hash = ++i;
+    }
+    updateHeight();
+    window.addEventListener("load", function() {
+        updateHeight();
+        setTimeout(updateHeight, 1000);
+    });
+    window.addEventListener("resize", updateHeight);
+    }());
+  </script>
+  </html>
+`);
+}
 
 class Card extends React.Component {
   state = {
     screenHeight: heightWin,
     imageWidth: null,
     imageHeight: null,
+    Height: 0 // default height, can be anything
   };
 
   onContentSizeChange = (contentWidth, contentHeight) => {
@@ -98,7 +157,16 @@ class Card extends React.Component {
       console.log(errorMsg);
     });
   }
-
+handleNavigationChange(navState) {
+  // Alert.alert(navState.title);
+  if (navState.title) {
+      const realContentHeight = parseInt(navState.title, 10) || 0; // turn NaN to 0
+      this.setState({realContentHeight});
+  }
+  if (typeof this.props.onNavigationStateChange === "function") {
+      this.props.onNavigationStateChange(navState);
+  }
+}
   render() {
     // const scrollEnabled = this.state.screenHeight > heightWin;
     const scrollEnabled = true;
@@ -112,9 +180,22 @@ class Card extends React.Component {
           onContentSizeChange={this.onContentSizeChange}
         >
           <View style={styles.card}>
-            <Text style={styles.textCard}>
+            {/* <Text style={styles.textCard}>
               {this.props.children}
-            </Text>
+            </Text> */}
+            {/* <WebView
+            style={{height: 1000}}
+        source={{ baseUrl: '', html: embedHtml(this.props.children) }}
+        /> */}
+        <WebView
+                    source={{ baseUrl: '', html: embedHtml(this.props.children) }}
+                    scaleToFit={true}
+                    scrollEnabled={false}
+                    javaScriptEnabled ={true}
+                    onNavigationStateChange={this.handleNavigationChange.bind(this)}
+                    style={{ height: this.state.realContentHeight}}
+                    />
+
             {this.props.image &&
               <Image
                 style={{ alignSelf: 'center', width: '100%', height: this.state.imageHeight - 40 }}

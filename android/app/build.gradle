@@ -148,6 +148,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-webview')
     compile project(':react-native-vector-icons')
     compile project(':react-native-restart')
     implementation fileTree(dir: "libs", include: ["*.jar"])
