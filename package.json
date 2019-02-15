@@ -1,5 +1,5 @@
 {
-  "name": "لرنینو",
+  "name": "lernino",
   "version": "0.0.2",
   "private": true,
   "scripts": {
@@ -11,6 +11,7 @@
     "global": "^4.3.2",
     "react": "16.6.1",
     "react-native": "0.57.5",
+    "react-native-popup-menu": "^0.15.0",
     "react-native-restart": "^0.0.7",
     "react-native-tab-view": "^1.2.0",
     "react-native-vector-icons": "^6.0.2",

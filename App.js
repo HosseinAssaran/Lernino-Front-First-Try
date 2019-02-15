@@ -1,6 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, AsyncStorage, StyleSheet, Text, View, Button, TouchableOpacity, I18nManager, Alert, ScrollView, Image, ImageBackground, Dimensions, SafeAreaView, StatusBar, RefreshControl } from 'react-native';
-import { createStackNavigator, NavigationEvents } from 'react-navigation';
+import { ActivityIndicator, AsyncStorage, StyleSheet, Text, Alert, View, Button, TouchableOpacity, I18nManager, ScrollView, Image, ImageBackground, Dimensions, SafeAreaView, StatusBar, RefreshControl } from 'react-native';
+import { createStackNavigator, DrawerNavigator } from 'react-navigation';
 import { TabView, TabBar } from 'react-native-tab-view';
 // import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -502,6 +502,16 @@ class LessonsScreen extends React.Component {
   }
 }
 
+import { MenuProvider } from 'react-native-popup-menu';
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+} from 'react-native-popup-menu';
+import IconMat from 'react-native-vector-icons/MaterialIcons'
+
+
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -570,12 +580,12 @@ class HomeScreen extends React.Component {
         let itemTitle2 = 'None';
         let itemAddress2 = '';
         let itemIconAddress2 = null;
-        let itemLessonsCount2 = 0;        
+        let itemLessonsCount2 = 0;
         let itemId3 = 0;
         let itemTitle3 = 'None';
         let itemAddress3 = '';
         let itemIconAddress3 = null;
-        let itemLessonsCount3 = 0;        
+        let itemLessonsCount3 = 0;
 
         if (circleDetails[i + 1]) {
           itemId2 = circleDetails[i + 1].id;
@@ -589,12 +599,12 @@ class HomeScreen extends React.Component {
           itemTitle3 = circleDetails[i + 2].title;
           itemAddress3 = circleDetails[i + 2].relative_address;
           itemIconAddress3 = circleDetails[i + 2].icon;
-          itemLessonsCount3 = circleDetails[i + 2].lessons_count;          
+          itemLessonsCount3 = circleDetails[i + 2].lessons_count;
         }
 
         CircleButtons.push(
           <View key={i} style={styles.circleButtonRowView}>
-            <CircleButton onPress={() => this.navigate(itemId1, itemTitle1, itemAddress1,itemLessonsCount1)}
+            <CircleButton onPress={() => this.navigate(itemId1, itemTitle1, itemAddress1, itemLessonsCount1)}
               value={baseAddress + itemIconAddress1} caption={itemTitle1} id={i} itemId={itemId1} />
             <CircleButton onPress={() => this.navigate(itemId2, itemTitle2, itemAddress2, itemLessonsCount2)}
               value={baseAddress + itemIconAddress2} caption={itemTitle2} id={i} itemId={itemId2} />
@@ -609,18 +619,69 @@ class HomeScreen extends React.Component {
       CircleButtons
     );
   }
+  _menu = null;
+
+  setMenuRef = ref => {
+    this._menu = ref;
+  };
+
+  hideMenu = () => {
+    this._menu.hide();
+  };
+
+  showMenu = () => {
+    Alert.alert("show");
+    this._menu.show();
+  };
 
   static navigationOptions = ({ navigation }) => {
     return {
       headerTitle: <LogoTitle />,
-      // headerRight: (
-      //   <View>
-      //     <Button
-      //       onPress={navigation.getParam('resetCourses')}
-      //       title='Reset'
-      //     />
-      //   </View>
-      // ),
+      //drawerLabel: 'Home',
+      // drawerIcon: ({ tintColor }) => (
+      //   <Image
+      //     source={require('./chats-icon.png')}
+      //     style={[styles.icon, {tintColor: tintColor}]}
+      //   />),
+      headerLeft: (
+        <View>
+          <Button
+            onPress={navigation.getParam('resetCourses')}
+            title='Reset'
+          />
+        </View>
+      ),
+      headerRight: (
+        <View>
+          <Menu>
+            <MenuTrigger>
+              <IconMat
+                name='more-vert'
+                size={24}
+                color={'white'}
+              />
+            </MenuTrigger>
+            <MenuOptions>
+              <MenuOption
+                onSelect={()=> Alert.alert('ریست درس‌ها', 'آیا مطمئن هستید؟', [
+                  {
+                    text: 'خیر',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'No',
+                  },
+                  { text: 'بله', onPress: navigation.getParam('resetCourses') },
+                ],
+                  { cancelable: false },
+                )
+                } text='تنظیم مجدد درس‌ها' />
+              <MenuOption onSelect={() => Alert.alert(`تنظیم فونت`, )} >
+                <Text style={{ color: 'red' }}>سایز فونت</Text>
+              </MenuOption>
+              <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`)} disabled={false} text='درباره' />
+            </MenuOptions>
+          </Menu>
+        </View>
+      ),
     };
   };
 
@@ -750,14 +811,107 @@ const RootStack = createStackNavigator(
     },
   }
 )
+class SideMenu extends React.Component {
+  navigateToScreen = (route) => () => {
+    const navigateAction = NavigationActions.navigate({
+      routeName: route
+    });
+    this.props.navigation.dispatch(navigateAction);
+  }
+
+  render() {
+    return (
+      <View style={styles.container1}>
+        <ScrollView>
+          <View>
+            <Text style={styles.sectionHeadingStyle}>
+              Section 1
+            </Text>
+            <View style={styles.navSectionStyle}>
+              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page1')}>
+                تنظیم فونت
+              </Text>
+            </View>
+          </View>
+          <View>
+            <Text style={styles.sectionHeadingStyle}>
+              Section 2
+            </Text>
+            <View style={styles.navSectionStyle}>
+              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page2')}>
+                Page2
+              </Text>
+              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page3')}>
+                Page3
+              </Text>
+            </View>
+          </View>
+          <View>
+            <Text style={styles.sectionHeadingStyle}>
+              Section 3
+            </Text>
+            <View style={styles.navSectionStyle}>
+              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page4')}>
+                Page4
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+        <View style={styles.footerContainer}>
+          <Text>This is my fixed footer</Text>
+        </View>
+      </View>
+    );
+  }
+}
+import PropTypes from 'prop-types';
+
+SideMenu.propTypes = {
+  navigation: PropTypes.object
+};
+
+const DrawerNav = DrawerNavigator({
+  Item1: {
+    screen: RootStack,
+  }
+}, {
+    contentComponent: SideMenu,
+    drawerWidth: Dimensions.get('window').width - 120,
+  });
+
+
 
 export default class App extends React.Component {
+
+
   render() {
-    return <RootStack />;
+    return (
+      <MenuProvider >
+
+        <DrawerNav />
+      </MenuProvider>
+
+    );
+
   }
+
 }
 
 const styles = StyleSheet.create({
+  navItemStyle: {
+    padding: 10
+  },
+  navSectionStyle: {
+    backgroundColor: 'lightgrey'
+  },
+  sectionHeadingStyle: {
+    paddingVertical: 10,
+    paddingHorizontal: 5
+  },
+  footerContainer: {
+    padding: 20,
+    backgroundColor: 'lightgrey'
+  },
   container: {
     flex: 1,
     // direction: 'rtl',
@@ -793,7 +947,7 @@ const styles = StyleSheet.create({
   },
   circleButtonView: {
     alignItems: 'center',
-    maxWidth: widthWin /5,
+    maxWidth: widthWin / 5,
   },
   circleButtonCaption: {
     alignSelf: 'center',
@@ -845,7 +999,7 @@ const styles = StyleSheet.create({
     margin: 10
   },
   textCard: {
-    textAlign: 'auto',
+    textAlign: 'justify',
     fontSize: 16,
     marginBottom: 5,
     color: "#4A4A4A",
