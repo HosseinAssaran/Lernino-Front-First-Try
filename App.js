@@ -91,6 +91,7 @@ class Card extends React.Component {
   };
 
   componentDidMount() {
+    Alert.alert(fontSizeG.toString());
     Image.getSize(baseAddress + this.props.image, (Width, Height) => {
       this.setState({ imageWidth: Width, imageHeight: Height / (Width / widthWin) });
 
@@ -112,7 +113,7 @@ class Card extends React.Component {
           onContentSizeChange={this.onContentSizeChange}
         >
           <View style={styles.card}>
-            <Text style={styles.textCard}>
+            <Text style={[styles.textCard, {fontSize : fontSizeG}]}>
               {this.props.children}
             </Text>
             {this.props.image &&
@@ -227,6 +228,43 @@ class PartsScreen extends React.Component {
         fontWeight: '200',
       },
       title: navigation.getParam('itemTitle', 'بدون عنوان'),
+      headerRight: (
+        <View>
+          <Menu>
+            <MenuTrigger customStyles={triggerStyles}>
+              <IconMat
+                name='more-vert'
+                size={24}
+                color={'white'}
+              />
+            </MenuTrigger>
+            <MenuOptions customStyles={optionsStyles}>
+              <MenuOption customStyles={{}}
+                onSelect={() => Alert.alert('ریست درس‌ها', 'آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟',
+                  [
+                    {
+                      text: 'خیر',
+                      onPress: () => console.log('Cancel Pressed'),
+                      style: { height: 10 },
+                    },
+                    {
+                      text: 'بله',
+                      onPress: navigation.getParam('resetCourses')
+                    },
+                  ],
+                  //{ cancelable: false },
+                )
+                } text='شروع درس‌ها از اول' />
+              <MenuOption onSelect={
+              navigation.getParam('setFontSize')
+              } >
+                <Text style={{ color: 'red', height: 20 }}>سایز فونت</Text>
+              </MenuOption>
+              <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`)} disabled={false} text='درباره' />
+            </MenuOptions>
+          </Menu>
+        </View>
+      ),
     };
   };
 
@@ -234,7 +272,7 @@ class PartsScreen extends React.Component {
     this.setState({ isLoading: true });
     fetchData(baseAddress + partsRelativeAddress)
       .then(((parsedRes) => this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })),
-      ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
+        ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
       );
   }
 
@@ -393,7 +431,7 @@ class LessonsScreen extends React.Component {
     this.setState({ isLoading: true });
     fetchData(baseAddress + lessonsRelativeAddress)
       .then(((parsedRes) => this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })),
-      ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
+        ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
       );
   }
 
@@ -511,6 +549,81 @@ import {
 } from 'react-native-popup-menu';
 import IconMat from 'react-native-vector-icons/MaterialIcons'
 
+import { DialogComponent } from 'react-native-dialog-component';
+import { Dialog } from 'react-native-simple-dialogs';
+import { MaterialDialog } from 'react-native-material-dialog';
+
+class MyDialog extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showDialog: true,
+      visible:true
+    };
+  }
+  openDialog = (show) => {
+    this.setState({ showDialog: show });
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+      {this.props.children}
+   <MaterialDialog
+  title="Use Google's Location Service?"
+  visible={this.state.visible}
+  onOk={() => this.setState({ visible: false })}
+  onCancel={() => this.setState({ visible: false })}>
+  <Text style={styles.dialogText}>
+    Let Google help apps determine location. This means sending anonymous
+    location data to Google, even when no apps are running.
+  </Text>
+</MaterialDialog>
+      {/* <Dialog
+        title="Custom Dialog"
+        animationType="fade"
+        contentStyle={
+          {
+            alignItems: "center",
+            justifyContent: "center",
+          }
+        }
+        onTouchOutside={() => this.openDialog(false)}
+        visible={this.state.showDialog}
+      >
+        <Image
+          source={
+            {
+              uri: "https://facebook.github.io/react-native/img/header_logo.png",
+            }
+          }
+          style={
+            {
+              width: 99,
+              height: 87,
+              backgroundColor: "black",
+              marginTop: 10,
+              resizeMode: "contain",
+            }
+          }
+        />
+        <Text style={{ marginVertical: 30 }}>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </Text>
+        <Button
+          onPress={() => this.openDialog(false)}
+          style={{ marginTop: 10 }}
+          title="CLOSE"
+        />
+      </Dialog> */}
+      </View> 
+
+    );
+  }
+}
+import { SinglePickerMaterialDialog } from 'react-native-material-dialog';
+const LIST = ['سایز ۱', 'سایز ۲', 'سایز ۳'];
+var fontSizeG = 16;
 
 class HomeScreen extends React.Component {
   constructor(props) {
@@ -520,6 +633,8 @@ class HomeScreen extends React.Component {
       error: [],
       isLoading: true,
       successfulLoad: false,
+      singlePickerVisible: true,
+      singlePickerSelectedItem: undefined,
     };
   }
 
@@ -619,22 +734,9 @@ class HomeScreen extends React.Component {
       CircleButtons
     );
   }
-  _menu = null;
-
-  setMenuRef = ref => {
-    this._menu = ref;
-  };
-
-  hideMenu = () => {
-    this._menu.hide();
-  };
-
-  showMenu = () => {
-    Alert.alert("show");
-    this._menu.show();
-  };
 
   static navigationOptions = ({ navigation }) => {
+    const { params = {} } = navigation.state;
     return {
       headerTitle: <LogoTitle />,
       //drawerLabel: 'Home',
@@ -643,39 +745,45 @@ class HomeScreen extends React.Component {
       //     source={require('./chats-icon.png')}
       //     style={[styles.icon, {tintColor: tintColor}]}
       //   />),
-      headerLeft: (
-        <View>
-          <Button
-            onPress={navigation.getParam('resetCourses')}
-            title='Reset'
-          />
-        </View>
-      ),
+      // headerLeft: (
+      //   <View>
+      //     <Button
+      //       onPress={navigation.getParam('resetCourses')}
+      //       title='Reset'
+      //     />
+      //   </View>
+      // ),
       headerRight: (
         <View>
           <Menu>
-            <MenuTrigger>
+            <MenuTrigger customStyles={triggerStyles}>
               <IconMat
                 name='more-vert'
                 size={24}
                 color={'white'}
               />
             </MenuTrigger>
-            <MenuOptions>
-              <MenuOption
-                onSelect={()=> Alert.alert('ریست درس‌ها', 'آیا مطمئن هستید؟', [
-                  {
-                    text: 'خیر',
-                    onPress: () => console.log('Cancel Pressed'),
-                    style: 'No',
-                  },
-                  { text: 'بله', onPress: navigation.getParam('resetCourses') },
-                ],
-                  { cancelable: false },
+            <MenuOptions customStyles={optionsStyles}>
+              <MenuOption customStyles={{}}
+                onSelect={() => Alert.alert('ریست درس‌ها', 'آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟',
+                  [
+                    {
+                      text: 'خیر',
+                      onPress: () => console.log('Cancel Pressed'),
+                      style: { height: 10 },
+                    },
+                    {
+                      text: 'بله',
+                      onPress: navigation.getParam('resetCourses')
+                    },
+                  ],
+                  //{ cancelable: false },
                 )
-                } text='تنظیم مجدد درس‌ها' />
-              <MenuOption onSelect={() => Alert.alert(`تنظیم فونت`, )} >
-                <Text style={{ color: 'red' }}>سایز فونت</Text>
+                } text='شروع درس‌ها از اول' />
+              <MenuOption onSelect={
+              navigation.getParam('setFontSize')
+              } >
+                <Text style={{ color: 'red', height: 20 }}>سایز فونت</Text>
               </MenuOption>
               <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`)} disabled={false} text='درباره' />
             </MenuOptions>
@@ -704,7 +812,7 @@ class HomeScreen extends React.Component {
     this.setState({ isLoading: true });
     fetchData(baseAddress + masterRelativeAddress)
       .then(((parsedRes) => this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })),
-      ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
+        ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
       );
   }
 
@@ -712,6 +820,7 @@ class HomeScreen extends React.Component {
     this.loadData();
     this.loadCoursesId();
     this.props.navigation.setParams({ resetCourses: this._resetCourses });
+    this.props.navigation.setParams({ setFontSize: this._showFontDialog });
   }
 
   loadCoursesId = async () => {
@@ -739,6 +848,10 @@ class HomeScreen extends React.Component {
     this.setState({});
   };
 
+  _showFontDialog = () => {
+    this.setState({singlePickerVisible:  true});
+  }
+
   render() {
     const { navigation } = this.props;
     const successfulLoad = this.state.successfulLoad;
@@ -755,7 +868,23 @@ class HomeScreen extends React.Component {
     }
     else
       return (
+       // <MyDialog>
         <View style={styles.container}>
+<SinglePickerMaterialDialog
+  title={'سایز فونت خود را انتخاب کنید:'}
+  items={LIST.map((row, index) => ({ value: index, label: row }))}
+  visible={this.state.singlePickerVisible}
+  selectedItem={this.state.singlePickerSelectedItem}
+  cancelLabel='لغو'
+  okLabel='تایید'
+  onCancel={() => this.setState({ singlePickerVisible: false })}
+  onOk={result => {
+    this.setState({ singlePickerVisible: false });
+    this.setState({ singlePickerSelectedItem: result.selectedItem });
+    fontSizeG = result.selectedItem.value * 2 + 16;
+    Alert.alert(fontSizeG.toString())
+  }}
+/>
           <StatusBar barStyle="light-content" backgroundColor="#468189" />
           <ScrollView
             style={styles.scrollView}
@@ -769,13 +898,13 @@ class HomeScreen extends React.Component {
           >
             {successfulLoad ? Courses :
               <View style={styles.errorView}>
-                <Text style={styles.errorText} >
+                   <Text style={styles.errorText} >
                   {this.state.error.toString()}
                 </Text>
                 <Button style={styles.ordinaryButton}
                   title='تلاش دوباره' onPress={() => this.loadData()}
                 />
-              </View>}
+                 </View>}
           </ScrollView>
           {/* <View style={{ backgroundColor: '#607c3a' }}>
             <Text style={styles.infoText}>
@@ -783,6 +912,7 @@ class HomeScreen extends React.Component {
           </Text>
           </View> */}
         </View>
+       // </MyDialog>
       );
   }
 }
@@ -811,107 +941,160 @@ const RootStack = createStackNavigator(
     },
   }
 )
-class SideMenu extends React.Component {
-  navigateToScreen = (route) => () => {
-    const navigateAction = NavigationActions.navigate({
-      routeName: route
-    });
-    this.props.navigation.dispatch(navigateAction);
-  }
-
-  render() {
-    return (
-      <View style={styles.container1}>
-        <ScrollView>
-          <View>
-            <Text style={styles.sectionHeadingStyle}>
-              Section 1
-            </Text>
-            <View style={styles.navSectionStyle}>
-              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page1')}>
-                تنظیم فونت
-              </Text>
-            </View>
-          </View>
-          <View>
-            <Text style={styles.sectionHeadingStyle}>
-              Section 2
-            </Text>
-            <View style={styles.navSectionStyle}>
-              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page2')}>
-                Page2
-              </Text>
-              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page3')}>
-                Page3
-              </Text>
-            </View>
-          </View>
-          <View>
-            <Text style={styles.sectionHeadingStyle}>
-              Section 3
-            </Text>
-            <View style={styles.navSectionStyle}>
-              <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page4')}>
-                Page4
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
-        <View style={styles.footerContainer}>
-          <Text>This is my fixed footer</Text>
-        </View>
-      </View>
-    );
-  }
-}
-import PropTypes from 'prop-types';
-
-SideMenu.propTypes = {
-  navigation: PropTypes.object
+const triggerStyles = {
+  triggerText: {
+    color: 'white',
+  },
+  triggerOuterWrapper: {
+    //backgroundColor: 'orange',
+    alignItems: 'center',
+    padding: 10,
+    //flex: 1,
+  },
+  // triggerWrapper: {
+  //   backgroundColor: 'blue',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   flex: 1,
+  // },
+  triggerTouchable: {
+    underlayColor: 'darkblue',
+    activeOpacity: 70,
+    style: {
+      flex: 1,
+    },
+  },
 };
 
-const DrawerNav = DrawerNavigator({
-  Item1: {
-    screen: RootStack,
-  }
-}, {
-    contentComponent: SideMenu,
-    drawerWidth: Dimensions.get('window').width - 120,
-  });
+const optionsStyles = {
+  optionsContainer: {
+    //backgroundColor: 'green',
+    padding: 5,
+  },
+  optionsWrapper: {
+    //backgroundColor: 'purple',
+  },
+  optionWrapper: {
+    //backgroundColor: 'yellow',
+    margin: 5,
+  },
+  optionTouchable: {
+    underlayColor: 'gold',
+    activeOpacity: 70,
+  },
+  optionText: {
+    //color: 'brown',
+  },
+};
+
+const optionStyles = {
+  optionTouchable: {
+    underlayColor: 'red',
+    activeOpacity: 40,
+  },
+  optionWrapper: {
+    backgroundColor: 'pink',
+    margin: 5,
+  },
+  optionText: {
+    color: 'black',
+  },
+};
+// class SideMenu extends React.Component {
+//   navigateToScreen = (route) => () => {
+//     const navigateAction = NavigationActions.navigate({
+//       routeName: route
+//     });
+//     this.props.navigation.dispatch(navigateAction);
+//   }
+
+//   render() {
+//     return (
+//       <View style={styles.container1}>
+//         <ScrollView>
+//           <View>
+//             <Text style={styles.sectionHeadingStyle}>
+//               Section 1
+//             </Text>
+//             <View style={styles.navSectionStyle}>
+//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page1')}>
+//                 تنظیم فونت
+//               </Text>
+//             </View>
+//           </View>
+//           <View>
+//             <Text style={styles.sectionHeadingStyle}>
+//               Section 2
+//             </Text>
+//             <View style={styles.navSectionStyle}>
+//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page2')}>
+//                 Page2
+//               </Text>
+//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page3')}>
+//                 Page3
+//               </Text>
+//             </View>
+//           </View>
+//           <View>
+//             <Text style={styles.sectionHeadingStyle}>
+//               Section 3
+//             </Text>
+//             <View style={styles.navSectionStyle}>
+//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page4')}>
+//                 Page4
+//               </Text>
+//             </View>
+//           </View>
+//         </ScrollView>
+//         <View style={styles.footerContainer}>
+//           <Text>This is my fixed footer</Text>
+//         </View>
+//       </View>
+//     );
+//   }
+// }
+// import PropTypes from 'prop-types';
+
+// SideMenu.propTypes = {
+//   navigation: PropTypes.object
+// };
+
+// const DrawerNav = DrawerNavigator({
+//   Item1: {
+//     screen: RootStack,
+//   }
+// }, {
+//     contentComponent: SideMenu,
+//     drawerWidth: Dimensions.get('window').width - 120,
+//   });
 
 
 
 export default class App extends React.Component {
-
-
   render() {
     return (
-      <MenuProvider >
-
-        <DrawerNav />
+      <MenuProvider>
+        <RootStack />
       </MenuProvider>
-
     );
-
   }
-
 }
 
 const styles = StyleSheet.create({
-  navItemStyle: {
-    padding: 10
-  },
-  navSectionStyle: {
-    backgroundColor: 'lightgrey'
-  },
-  sectionHeadingStyle: {
-    paddingVertical: 10,
-    paddingHorizontal: 5
-  },
-  footerContainer: {
-    padding: 20,
-    backgroundColor: 'lightgrey'
-  },
+  // navItemStyle: {
+  //   padding: 10
+  // },
+  // navSectionStyle: {
+  //   backgroundColor: 'lightgrey'
+  // },
+  // sectionHeadingStyle: {
+  //   paddingVertical: 10,
+  //   paddingHorizontal: 5
+  // },
+  // footerContainer: {
+  //   padding: 20,
+  //   backgroundColor: 'lightgrey'
+  // },
   container: {
     flex: 1,
     // direction: 'rtl',
