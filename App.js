@@ -1,10 +1,19 @@
+
+// import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, AsyncStorage, StyleSheet, Text, Alert, View, Button, TouchableOpacity, I18nManager, ScrollView, Image, ImageBackground, Dimensions, SafeAreaView, StatusBar, RefreshControl } from 'react-native';
 import { createStackNavigator, DrawerNavigator } from 'react-navigation';
 import { TabView, TabBar } from 'react-native-tab-view';
-// import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/Ionicons';
-
+import { MenuProvider } from 'react-native-popup-menu';
+import {Menu, MenuOptions, MenuOption, MenuTrigger} from 'react-native-popup-menu';
+import IconMat from 'react-native-vector-icons/MaterialIcons'
+import { DialogComponent } from 'react-native-dialog-component';
+import { Dialog } from 'react-native-simple-dialogs';
+import { MaterialDialog } from 'react-native-material-dialog';
+import { SinglePickerMaterialDialog } from 'react-native-material-dialog';
+const LIST = ['سایز ۱', 'سایز ۲', 'سایز ۳', 'سایز ۴'];
+var fontSizeG = 16;
 
 
 const baseAddress = 'http://rest.lernino.com';
@@ -91,7 +100,6 @@ class Card extends React.Component {
   };
 
   componentDidMount() {
-    Alert.alert(fontSizeG.toString());
     Image.getSize(baseAddress + this.props.image, (Width, Height) => {
       this.setState({ imageWidth: Width, imageHeight: Height / (Width / widthWin) });
 
@@ -113,7 +121,7 @@ class Card extends React.Component {
           onContentSizeChange={this.onContentSizeChange}
         >
           <View style={styles.card}>
-            <Text style={[styles.textCard, {fontSize : fontSizeG}]}>
+            <Text style={[styles.textCard, { fontSize: fontSizeG }]}>
               {this.props.children}
             </Text>
             {this.props.image &&
@@ -218,6 +226,8 @@ class PartsScreen extends React.Component {
       isLoading: true,
       isLastTab: false,
       successfulLoad: false,
+      singlePickerVisible: false,
+      singlePickerSelectedItem: undefined,
     };
   }
   static navigationOptions = ({ navigation }) => {
@@ -239,28 +249,11 @@ class PartsScreen extends React.Component {
               />
             </MenuTrigger>
             <MenuOptions customStyles={optionsStyles}>
-              <MenuOption customStyles={{}}
-                onSelect={() => Alert.alert('ریست درس‌ها', 'آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟',
-                  [
-                    {
-                      text: 'خیر',
-                      onPress: () => console.log('Cancel Pressed'),
-                      style: { height: 10 },
-                    },
-                    {
-                      text: 'بله',
-                      onPress: navigation.getParam('resetCourses')
-                    },
-                  ],
-                  //{ cancelable: false },
-                )
-                } text='شروع درس‌ها از اول' />
               <MenuOption onSelect={
-              navigation.getParam('setFontSize')
+                navigation.getParam('setFontSize')
               } >
                 <Text style={{ color: 'red', height: 20 }}>سایز فونت</Text>
               </MenuOption>
-              <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`)} disabled={false} text='درباره' />
             </MenuOptions>
           </Menu>
         </View>
@@ -276,8 +269,30 @@ class PartsScreen extends React.Component {
       );
   }
 
+  loadFontSize = async () => {
+    try {
+      const fontSizeStored = await AsyncStorage.getItem('fontSizeStored');
+      if (fontSizeStored != null) {
+        fontSizeG = parseInt(fontSizeStored, 10);
+        //Alert.alert(fontSizeG.toString());
+      }
+      else {
+        //Alert.alert('Font Size Not Stored.');
+      }
+    }
+    catch (error) {
+      Alert.alert('Error in reading font size.');
+      // Alert.alert(error)
+    }
+  }
   componentDidMount() {
     this.loadData();
+    this.loadFontSize();
+    this.props.navigation.setParams({ setFontSize: this._showFontDialog });
+  }
+
+  _showFontDialog = () => {
+    this.setState({ singlePickerVisible: true });
   }
 
   goBack() {
@@ -310,6 +325,15 @@ class PartsScreen extends React.Component {
     }
   }
 
+  _storeFontSize = async () => {
+    try {
+      await AsyncStorage.setItem('fontSizeStored', fontSizeG.toString());
+    } catch (error) {
+      Alert.alert('Error in storing Font Size.')
+      // Error saving data
+    }
+  };
+
   render() {
     const successfulLoad = this.state.successfulLoad;
     const isLoading = this.state.isLoading;
@@ -325,6 +349,22 @@ class PartsScreen extends React.Component {
     else
       return (
         <View style={[styles.container]}>
+          <SinglePickerMaterialDialog
+            title={'سایز فونت خود را انتخاب کنید:'}
+            items={LIST.map((row, index) => ({ value: index, label: row }))}
+            visible={this.state.singlePickerVisible}
+            selectedItem={this.state.singlePickerSelectedItem}
+            cancelLabel='لغو'
+            okLabel='تایید'
+            onCancel={() => this.setState({ singlePickerVisible: false })}
+            onOk={result => {
+              this.setState({ singlePickerVisible: false });
+              this.setState({ singlePickerSelectedItem: result.selectedItem });
+              fontSizeG = result.selectedItem.value * 2 + 16;
+              this._storeFontSize();
+              //Alert.alert(fontSizeG.toString())
+            }}
+          />
           <StatusBar barStyle="light-content" backgroundColor="#468189" />
           {successfulLoad && this.state.data.length > 0 ?
             <TabInParts
@@ -540,25 +580,12 @@ class LessonsScreen extends React.Component {
   }
 }
 
-import { MenuProvider } from 'react-native-popup-menu';
-import {
-  Menu,
-  MenuOptions,
-  MenuOption,
-  MenuTrigger,
-} from 'react-native-popup-menu';
-import IconMat from 'react-native-vector-icons/MaterialIcons'
-
-import { DialogComponent } from 'react-native-dialog-component';
-import { Dialog } from 'react-native-simple-dialogs';
-import { MaterialDialog } from 'react-native-material-dialog';
-
 class MyDialog extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       showDialog: true,
-      visible:true
+      visible: true
     };
   }
   openDialog = (show) => {
@@ -568,18 +595,18 @@ class MyDialog extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-      {this.props.children}
-   <MaterialDialog
-  title="Use Google's Location Service?"
-  visible={this.state.visible}
-  onOk={() => this.setState({ visible: false })}
-  onCancel={() => this.setState({ visible: false })}>
-  <Text style={styles.dialogText}>
-    Let Google help apps determine location. This means sending anonymous
-    location data to Google, even when no apps are running.
+        {this.props.children}
+        <MaterialDialog
+          title="Use Google's Location Service?"
+          visible={this.state.visible}
+          onOk={() => this.setState({ visible: false })}
+          onCancel={() => this.setState({ visible: false })}>
+          <Text style={styles.dialogText}>
+            Let Google help apps determine location. This means sending anonymous
+            location data to Google, even when no apps are running.
   </Text>
-</MaterialDialog>
-      {/* <Dialog
+        </MaterialDialog>
+        {/* <Dialog
         title="Custom Dialog"
         animationType="fade"
         contentStyle={
@@ -616,14 +643,11 @@ class MyDialog extends React.Component {
           title="CLOSE"
         />
       </Dialog> */}
-      </View> 
+      </View>
 
     );
   }
 }
-import { SinglePickerMaterialDialog } from 'react-native-material-dialog';
-const LIST = ['سایز ۱', 'سایز ۲', 'سایز ۳'];
-var fontSizeG = 16;
 
 class HomeScreen extends React.Component {
   constructor(props) {
@@ -633,8 +657,8 @@ class HomeScreen extends React.Component {
       error: [],
       isLoading: true,
       successfulLoad: false,
-      singlePickerVisible: true,
-      singlePickerSelectedItem: undefined,
+      // singlePickerVisible: true,
+      // singlePickerSelectedItem: undefined,
     };
   }
 
@@ -745,14 +769,14 @@ class HomeScreen extends React.Component {
       //     source={require('./chats-icon.png')}
       //     style={[styles.icon, {tintColor: tintColor}]}
       //   />),
-      // headerLeft: (
-      //   <View>
-      //     <Button
-      //       onPress={navigation.getParam('resetCourses')}
-      //       title='Reset'
-      //     />
-      //   </View>
-      // ),
+      headerLeft: (
+        <View>
+          <Button
+            onPress={navigation.getParam('resetFontSize')}
+            title='Reset'
+          />
+        </View>
+      ),
       headerRight: (
         <View>
           <Menu>
@@ -765,7 +789,7 @@ class HomeScreen extends React.Component {
             </MenuTrigger>
             <MenuOptions customStyles={optionsStyles}>
               <MenuOption customStyles={{}}
-                onSelect={() => Alert.alert('ریست درس‌ها', 'آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟',
+                onSelect={() => Alert.alert('شروع درس‌ها از اول', 'آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟',
                   [
                     {
                       text: 'خیر',
@@ -780,12 +804,10 @@ class HomeScreen extends React.Component {
                   //{ cancelable: false },
                 )
                 } text='شروع درس‌ها از اول' />
-              <MenuOption onSelect={
-              navigation.getParam('setFontSize')
-              } >
-                <Text style={{ color: 'red', height: 20 }}>سایز فونت</Text>
-              </MenuOption>
-              <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`)} disabled={false} text='درباره' />
+              <MenuOption onSelect={() => Alert.alert('منابع', '1. https://www.pcmag.com\n 2. https://en.wikipedia.org\n 3. https://tutorialspoint.com')}
+                disabled={false} text='منابع مورد استفاده' />
+              <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`)}
+                disabled={false} text='درباره' />
             </MenuOptions>
           </Menu>
         </View>
@@ -820,7 +842,7 @@ class HomeScreen extends React.Component {
     this.loadData();
     this.loadCoursesId();
     this.props.navigation.setParams({ resetCourses: this._resetCourses });
-    this.props.navigation.setParams({ setFontSize: this._showFontDialog });
+    this.props.navigation.setParams({ resetFontSize: this._resetFontSize });
   }
 
   loadCoursesId = async () => {
@@ -848,9 +870,13 @@ class HomeScreen extends React.Component {
     this.setState({});
   };
 
-  _showFontDialog = () => {
-    this.setState({singlePickerVisible:  true});
+  _resetFontSize = () => {
+    AsyncStorage.removeItem('fontSizeStored');
   }
+  // _showFontDialog = () => {
+  //   this.setState({singlePickerVisible:  true});
+  // }
+
 
   render() {
     const { navigation } = this.props;
@@ -868,23 +894,8 @@ class HomeScreen extends React.Component {
     }
     else
       return (
-       // <MyDialog>
+        // <MyDialog>
         <View style={styles.container}>
-<SinglePickerMaterialDialog
-  title={'سایز فونت خود را انتخاب کنید:'}
-  items={LIST.map((row, index) => ({ value: index, label: row }))}
-  visible={this.state.singlePickerVisible}
-  selectedItem={this.state.singlePickerSelectedItem}
-  cancelLabel='لغو'
-  okLabel='تایید'
-  onCancel={() => this.setState({ singlePickerVisible: false })}
-  onOk={result => {
-    this.setState({ singlePickerVisible: false });
-    this.setState({ singlePickerSelectedItem: result.selectedItem });
-    fontSizeG = result.selectedItem.value * 2 + 16;
-    Alert.alert(fontSizeG.toString())
-  }}
-/>
           <StatusBar barStyle="light-content" backgroundColor="#468189" />
           <ScrollView
             style={styles.scrollView}
@@ -898,13 +909,13 @@ class HomeScreen extends React.Component {
           >
             {successfulLoad ? Courses :
               <View style={styles.errorView}>
-                   <Text style={styles.errorText} >
+                <Text style={styles.errorText} >
                   {this.state.error.toString()}
                 </Text>
                 <Button style={styles.ordinaryButton}
                   title='تلاش دوباره' onPress={() => this.loadData()}
                 />
-                 </View>}
+              </View>}
           </ScrollView>
           {/* <View style={{ backgroundColor: '#607c3a' }}>
             <Text style={styles.infoText}>
@@ -912,7 +923,7 @@ class HomeScreen extends React.Component {
           </Text>
           </View> */}
         </View>
-       // </MyDialog>
+        // </MyDialog>
       );
   }
 }
