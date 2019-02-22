@@ -1,19 +1,16 @@
 
 // import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, AsyncStorage, StyleSheet, Text, Alert, View, Button, TouchableOpacity, I18nManager, ScrollView, Image, ImageBackground, Dimensions, SafeAreaView, StatusBar, RefreshControl } from 'react-native';
+import { ActivityIndicator, Slider, AsyncStorage, StyleSheet, Text, Alert, View, Button, TouchableOpacity, TouchableHighlight, I18nManager, ScrollView, Image, ImageBackground, Dimensions, SafeAreaView, StatusBar, RefreshControl } from 'react-native';
 import { createStackNavigator, DrawerNavigator } from 'react-navigation';
 import { TabView, TabBar } from 'react-native-tab-view';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { MenuProvider } from 'react-native-popup-menu';
-import {Menu, MenuOptions, MenuOption, MenuTrigger} from 'react-native-popup-menu';
+import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import IconMat from 'react-native-vector-icons/MaterialIcons'
-import { DialogComponent } from 'react-native-dialog-component';
 import { Dialog } from 'react-native-simple-dialogs';
-import { MaterialDialog } from 'react-native-material-dialog';
-import { SinglePickerMaterialDialog } from 'react-native-material-dialog';
-const LIST = ['سایز ۱', 'سایز ۲', 'سایز ۳', 'سایز ۴'];
-var fontSizeG = 16;
+const FontSizeName = ['ریز', 'معمولی', 'بزرگ', 'خیلی بزرگ'];
+// var fontSizeG = 16;
 
 
 const baseAddress = 'http://rest.lernino.com';
@@ -121,7 +118,7 @@ class Card extends React.Component {
           onContentSizeChange={this.onContentSizeChange}
         >
           <View style={styles.card}>
-            <Text style={[styles.textCard, { fontSize: fontSizeG }]}>
+            <Text style={[styles.textCard, { fontSize: this.props.fontSize * 3 + 14 }]}>
               {this.props.children}
             </Text>
             {this.props.image &&
@@ -163,7 +160,7 @@ class TabInParts extends React.Component {
 
   _renderScene = ({ route }) => {
     return (
-      <Card continueHandler={this.continueHandler} image={route.image}>
+      <Card continueHandler={this.continueHandler} image={route.image} fontSize={this.props.cardFontSize}>
         {route.text}
       </Card>);
   }
@@ -226,8 +223,8 @@ class PartsScreen extends React.Component {
       isLoading: true,
       isLastTab: false,
       successfulLoad: false,
-      singlePickerVisible: false,
-      singlePickerSelectedItem: undefined,
+      dialogVisible: false,
+      fontSizeS: 1,
     };
   }
   static navigationOptions = ({ navigation }) => {
@@ -251,8 +248,9 @@ class PartsScreen extends React.Component {
             <MenuOptions customStyles={optionsStyles}>
               <MenuOption onSelect={
                 navigation.getParam('setFontSize')
-              } >
-                <Text style={{ color: 'red', height: 20 }}>سایز فونت</Text>
+              } text='اندازه قلم'
+              >
+                {/* <Text style={{ height: 20, fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200',}}>اندازه قلم</Text> */}
               </MenuOption>
             </MenuOptions>
           </Menu>
@@ -273,18 +271,31 @@ class PartsScreen extends React.Component {
     try {
       const fontSizeStored = await AsyncStorage.getItem('fontSizeStored');
       if (fontSizeStored != null) {
-        fontSizeG = parseInt(fontSizeStored, 10);
-        //Alert.alert(fontSizeG.toString());
+        const fontSizeParsed = parseInt(fontSizeStored, 10);
+        // fontSizeG = parseInt(fontSizeStored, 10);
+        this.setState({ fontSizeS: fontSizeParsed });
+        //Alert.alert(this.state.fontSizeS.toString());
       }
       else {
         //Alert.alert('Font Size Not Stored.');
       }
     }
     catch (error) {
-      Alert.alert('Error in reading font size.');
-      // Alert.alert(error)
+      //Alert.alert('Error in reading font size.');
+      Alert.alert(error.toString());
     }
   }
+  storeFontSize = async (value) => {
+    try {
+      const fontSize = value;
+      await AsyncStorage.setItem('fontSizeStored', fontSize.toString());
+      //Alert.alert(fontSize.toString())
+    } catch (error) {
+      Alert.alert('Error in storing Font Size.')
+      // Error saving data
+    }
+  };
+
   componentDidMount() {
     this.loadData();
     this.loadFontSize();
@@ -292,7 +303,7 @@ class PartsScreen extends React.Component {
   }
 
   _showFontDialog = () => {
-    this.setState({ singlePickerVisible: true });
+    this.setState({ dialogVisible: true });
   }
 
   goBack() {
@@ -325,14 +336,7 @@ class PartsScreen extends React.Component {
     }
   }
 
-  _storeFontSize = async () => {
-    try {
-      await AsyncStorage.setItem('fontSizeStored', fontSizeG.toString());
-    } catch (error) {
-      Alert.alert('Error in storing Font Size.')
-      // Error saving data
-    }
-  };
+
 
   render() {
     const successfulLoad = this.state.successfulLoad;
@@ -349,27 +353,51 @@ class PartsScreen extends React.Component {
     else
       return (
         <View style={[styles.container]}>
-          <SinglePickerMaterialDialog
-            title={'سایز فونت خود را انتخاب کنید:'}
-            items={LIST.map((row, index) => ({ value: index, label: row }))}
-            visible={this.state.singlePickerVisible}
-            selectedItem={this.state.singlePickerSelectedItem}
-            cancelLabel='لغو'
-            okLabel='تایید'
-            onCancel={() => this.setState({ singlePickerVisible: false })}
-            onOk={result => {
-              this.setState({ singlePickerVisible: false });
-              this.setState({ singlePickerSelectedItem: result.selectedItem });
-              fontSizeG = result.selectedItem.value * 2 + 16;
-              this._storeFontSize();
-              //Alert.alert(fontSizeG.toString())
-            }}
-          />
+          <Dialog
+            visible={this.state.dialogVisible}
+            title="اندازه قلم"
+            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            onTouchOutside={() => this.setState({ dialogVisible: false })}
+            onRequestClose={() => this.setState({ dialogVisible: false })}
+          >
+            <View style={{
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Text style={{ fontSize: 18, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+                {FontSizeName[this.state.fontSizeS]}
+              </Text>
+              <Slider
+                style={{ width: '100%', height: 50 }}
+                thumbTouchSize={{ width: 50, height: 40 }}
+                maximumValue={3}
+                value={this.state.fontSizeS}
+                step={1}
+                onValueChange={(value) => {
+                  // fontSizeG = value * 2 + 16;
+                  this.setState({ fontSizeS: value });
+                  this.storeFontSize(value);
+                }}
+              //maximumTrackTintColor='#45f330'
+              //thumbTintColor ='#45f330'
+
+              />
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+                onPress={() => this.setState({ dialogVisible: false })}
+              >
+                <Text style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
+                  تایید
+            </Text>
+              </TouchableOpacity>
+            </View>
+          </Dialog>
           <StatusBar barStyle="light-content" backgroundColor="#468189" />
           {successfulLoad && this.state.data.length > 0 ?
             <TabInParts
               backToLessonHandler={this.goBack}
               isLastTabClicked={this.lastTabClicked}
+              cardFontSize={this.state.fontSizeS}
               routes={this.state.data} /> :
             <View style={styles.errorView}>
               {successfulLoad ?
@@ -579,76 +607,6 @@ class LessonsScreen extends React.Component {
       );
   }
 }
-
-class MyDialog extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showDialog: true,
-      visible: true
-    };
-  }
-  openDialog = (show) => {
-    this.setState({ showDialog: show });
-  }
-
-  render() {
-    return (
-      <View style={styles.container}>
-        {this.props.children}
-        <MaterialDialog
-          title="Use Google's Location Service?"
-          visible={this.state.visible}
-          onOk={() => this.setState({ visible: false })}
-          onCancel={() => this.setState({ visible: false })}>
-          <Text style={styles.dialogText}>
-            Let Google help apps determine location. This means sending anonymous
-            location data to Google, even when no apps are running.
-  </Text>
-        </MaterialDialog>
-        {/* <Dialog
-        title="Custom Dialog"
-        animationType="fade"
-        contentStyle={
-          {
-            alignItems: "center",
-            justifyContent: "center",
-          }
-        }
-        onTouchOutside={() => this.openDialog(false)}
-        visible={this.state.showDialog}
-      >
-        <Image
-          source={
-            {
-              uri: "https://facebook.github.io/react-native/img/header_logo.png",
-            }
-          }
-          style={
-            {
-              width: 99,
-              height: 87,
-              backgroundColor: "black",
-              marginTop: 10,
-              resizeMode: "contain",
-            }
-          }
-        />
-        <Text style={{ marginVertical: 30 }}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        </Text>
-        <Button
-          onPress={() => this.openDialog(false)}
-          style={{ marginTop: 10 }}
-          title="CLOSE"
-        />
-      </Dialog> */}
-      </View>
-
-    );
-  }
-}
-
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -657,8 +615,6 @@ class HomeScreen extends React.Component {
       error: [],
       isLoading: true,
       successfulLoad: false,
-      // singlePickerVisible: true,
-      // singlePickerSelectedItem: undefined,
     };
   }
 
@@ -769,14 +725,14 @@ class HomeScreen extends React.Component {
       //     source={require('./chats-icon.png')}
       //     style={[styles.icon, {tintColor: tintColor}]}
       //   />),
-      headerLeft: (
-        <View>
-          <Button
-            onPress={navigation.getParam('resetFontSize')}
-            title='Reset'
-          />
-        </View>
-      ),
+      // headerLeft: (
+      //   <View>
+      //     <Button
+      //       onPress={navigation.getParam('resetFontSize')}
+      //       title='Reset'
+      //     />
+      //   </View>
+      // ),
       headerRight: (
         <View>
           <Menu>
@@ -803,10 +759,26 @@ class HomeScreen extends React.Component {
                   ],
                   //{ cancelable: false },
                 )
-                } text='شروع درس‌ها از اول' />
-              <MenuOption onSelect={() => Alert.alert('منابع', '1. https://www.pcmag.com\n 2. https://en.wikipedia.org\n 3. https://tutorialspoint.com')}
+                } text='شروع درس‌ها از اول'
+                textStyle={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200' }} />
+              <MenuOption onSelect={() => Alert.alert('منابع', '1. https://www.pcmag.com\n 2. https://en.wikipedia.org\n 3. https://tutorialspoint.com',
+                [
+                  {
+                    text: 'تایید',
+                    onPress: () => console.log('Confirm Pressed'),
+                    style: { height: 10 },
+                  },
+                ]
+              )}
                 disabled={false} text='منابع مورد استفاده' />
-              <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`)}
+              <MenuOption onSelect={() => Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`,
+                [
+                  {
+                    text: 'تایید',
+                    onPress: () => console.log('Confirm Pressed'),
+                    style: { height: 10 },
+                  },
+                ])}
                 disabled={false} text='درباره' />
             </MenuOptions>
           </Menu>
@@ -873,10 +845,6 @@ class HomeScreen extends React.Component {
   _resetFontSize = () => {
     AsyncStorage.removeItem('fontSizeStored');
   }
-  // _showFontDialog = () => {
-  //   this.setState({singlePickerVisible:  true});
-  // }
-
 
   render() {
     const { navigation } = this.props;
@@ -959,22 +927,43 @@ const triggerStyles = {
   triggerOuterWrapper: {
     //backgroundColor: 'orange',
     alignItems: 'center',
-    padding: 10,
+    padding: 2,
     //flex: 1,
   },
-  // triggerWrapper: {
+   triggerWrapper: {
   //   backgroundColor: 'blue',
-  //   alignItems: 'center',
-  //   justifyContent: 'center',
-  //   flex: 1,
-  // },
-  triggerTouchable: {
-    underlayColor: 'darkblue',
-    activeOpacity: 70,
-    style: {
-      flex: 1,
-    },
+  alignItems: 'center',
+  justifyContent: 'center',
   },
+  TriggerTouchableComponent: TouchableHighlight,
+  triggerTouchable: { title: 'buttonText ',
+    //underlayColor: 'darkblue',
+    activeOpacity: 0.70,
+style: {
+      //flex: 1,
+      //padding: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+       width: 40 ,
+       height: 40,
+      borderRadius: 20 ,
+      // borderColor: '#05c13e',
+      // borderWidth: 1.5,
+    },
+  // triggerTouchable: {
+  //   underlayColor: 'darkblue',
+  //   activeOpacity: 0.70,
+  //   style: {
+  //     flex: 1,
+  //     padding: 100,
+  //     width: 100,
+  //     height: 100,
+  //     borderRadius: 40 ,
+  //     borderColor: '#05c13e',
+  //     borderWidth: 1.5,
+  //   },
+  // },
+  }
 };
 
 const optionsStyles = {
@@ -994,6 +983,9 @@ const optionsStyles = {
     activeOpacity: 70,
   },
   optionText: {
+    fontSize: 16,
+    fontFamily: 'Vazir Medium',
+    fontWeight: '200',
     //color: 'brown',
   },
 };
