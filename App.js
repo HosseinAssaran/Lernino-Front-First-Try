@@ -2,7 +2,7 @@
 // import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, Slider, AsyncStorage, StyleSheet, Text, Alert, View, Button, TouchableOpacity, TouchableHighlight, I18nManager, ScrollView, Image, ImageBackground, Dimensions, SafeAreaView, StatusBar, RefreshControl } from 'react-native';
-import { createStackNavigator, DrawerNavigator } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation';
 import { TabView, TabBar } from 'react-native-tab-view';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { MenuProvider } from 'react-native-popup-menu';
@@ -10,7 +10,6 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-m
 import IconMat from 'react-native-vector-icons/MaterialIcons'
 import { Dialog } from 'react-native-simple-dialogs';
 const FontSizeName = ['ریز', 'معمولی', 'بزرگ', 'خیلی بزرگ'];
-// var fontSizeG = 16;
 
 
 const baseAddress = 'http://rest.lernino.com';
@@ -227,6 +226,7 @@ class PartsScreen extends React.Component {
       fontSizeS: 1,
     };
   }
+
   static navigationOptions = ({ navigation }) => {
     return {
       headerTitleStyle: {
@@ -249,9 +249,7 @@ class PartsScreen extends React.Component {
               <MenuOption onSelect={
                 navigation.getParam('setFontSize')
               } text='اندازه قلم'
-              >
-                {/* <Text style={{ height: 20, fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200',}}>اندازه قلم</Text> */}
-              </MenuOption>
+              />
             </MenuOptions>
           </Menu>
         </View>
@@ -272,7 +270,6 @@ class PartsScreen extends React.Component {
       const fontSizeStored = await AsyncStorage.getItem('fontSizeStored');
       if (fontSizeStored != null) {
         const fontSizeParsed = parseInt(fontSizeStored, 10);
-        // fontSizeG = parseInt(fontSizeStored, 10);
         this.setState({ fontSizeS: fontSizeParsed });
         //Alert.alert(this.state.fontSizeS.toString());
       }
@@ -299,10 +296,10 @@ class PartsScreen extends React.Component {
   componentDidMount() {
     this.loadData();
     this.loadFontSize();
-    this.props.navigation.setParams({ setFontSize: this._showFontDialog });
+    this.props.navigation.setParams({ setFontSize: this.showFontDialog });
   }
 
-  _showFontDialog = () => {
+  showFontDialog = () => {
     this.setState({ dialogVisible: true });
   }
 
@@ -315,10 +312,7 @@ class PartsScreen extends React.Component {
     // Alert.alert(isLastTab.toString()) ;
   }
 
-  saveItemId(itemId) {
-    // lessonsIdPassed = [];  
-    // AsyncStorage.setItem('itemId', JSON.stringify(lessonsIdPassed));          
-
+  saveItemId(itemId) {          
     if (lessonsIdPassed.indexOf(itemId) === -1) {
       lessonsIdPassed.push(itemId)
       AsyncStorage.setItem('itemId', JSON.stringify(lessonsIdPassed));
@@ -335,8 +329,6 @@ class PartsScreen extends React.Component {
       // Alert.alert(itemId.toString());    
     }
   }
-
-
 
   render() {
     const successfulLoad = this.state.successfulLoad;
@@ -380,15 +372,12 @@ class PartsScreen extends React.Component {
                 }}
               //maximumTrackTintColor='#45f330'
               //thumbTintColor ='#45f330'
-
               />
               <TouchableOpacity
                 style={{ justifyContent: 'flex-start', alignSelf: 'flex-start' }}
                 onPress={() => this.setState({ dialogVisible: false })}
               >
-                <Text style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
-                  تایید
-            </Text>
+                <Text style={{ paddingHorizontal: 20, paddingVertical: 10 }}>تایید</Text>
               </TouchableOpacity>
             </View>
           </Dialog>
@@ -402,7 +391,6 @@ class PartsScreen extends React.Component {
             <View style={styles.errorView}>
               {successfulLoad ?
                 <Text style={styles.errorText}>
-                  {/* {this.state.data.toString} */}
                   برای این درس هنوز محتوایی تهیه نشده است. از شکیبایی شما سپاسگزاریم.
                 </Text>
                 :
@@ -761,7 +749,7 @@ class HomeScreen extends React.Component {
                 )
                 } text='شروع درس‌ها از اول'
                 textStyle={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200' }} />
-              <MenuOption onSelect={() => Alert.alert('منابع', '1. https://www.pcmag.com\n 2. https://en.wikipedia.org\n 3. https://tutorialspoint.com',
+              <MenuOption onSelect={() => Alert.alert('منابع', '1. https://www.pcmag.com\n2. https://en.wikipedia.org\n3. https://tutorialspoint.com',
                 [
                   {
                     text: 'تایید',
@@ -930,39 +918,27 @@ const triggerStyles = {
     padding: 2,
     //flex: 1,
   },
-   triggerWrapper: {
-  //   backgroundColor: 'blue',
-  alignItems: 'center',
-  justifyContent: 'center',
+  triggerWrapper: {
+    //   backgroundColor: 'blue',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   TriggerTouchableComponent: TouchableHighlight,
-  triggerTouchable: { title: 'buttonText ',
+  triggerTouchable: {
+    title: 'buttonText ',
     //underlayColor: 'darkblue',
     activeOpacity: 0.70,
-style: {
+    style: {
       //flex: 1,
       //padding: 10,
       alignItems: 'center',
       justifyContent: 'center',
-       width: 40 ,
-       height: 40,
-      borderRadius: 20 ,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       // borderColor: '#05c13e',
       // borderWidth: 1.5,
     },
-  // triggerTouchable: {
-  //   underlayColor: 'darkblue',
-  //   activeOpacity: 0.70,
-  //   style: {
-  //     flex: 1,
-  //     padding: 100,
-  //     width: 100,
-  //     height: 100,
-  //     borderRadius: 40 ,
-  //     borderColor: '#05c13e',
-  //     borderWidth: 1.5,
-  //   },
-  // },
   }
 };
 
