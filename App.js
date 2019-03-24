@@ -311,7 +311,7 @@ class PartsScreen extends React.Component {
     // Alert.alert(isLastTab.toString()) ;
   }
 
-  saveItemId(itemId) {          
+  saveItemId(itemId) {
     if (lessonsIdPassed.indexOf(itemId) === -1) {
       lessonsIdPassed.push(itemId)
       AsyncStorage.setItem('itemId', JSON.stringify(lessonsIdPassed));
@@ -355,31 +355,31 @@ class PartsScreen extends React.Component {
               alignItems: "center",
               justifyContent: "center",
             }}>
-              <Text style={{ fontSize: this.state.fontSizeS  * 3 + 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+              <Text style={{ fontSize: this.state.fontSizeS * 3 + 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
                 {FontSizeName[this.state.fontSizeS]}
               </Text>
-              <View style={{flexDirection: 'row'}}>
-              <Text style={{ fontSize: 23, fontFamily: 'Vazir Medium', fontWeight: '200', alignSelf: 'center'  }}>آ</Text>
-              <Slider
-                style={{ width: '80%', height: 50 }}
-                thumbTouchSize={{ width: 50, height: 40 }}
-                maximumValue={3}
-                value={this.state.fontSizeS}
-                step={1}
-                onValueChange={(value) => {
-                  this.setState({ fontSizeS: value });
-                  this.storeFontSize(value);
-                }}              
-              //maximumTrackTintColor='#45f330'
-              //thumbTintColor ='#45f330'
-              />
-              <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', alignSelf: 'center' }}>آ</Text>             
-               </View>
+              <View style={{ flexDirection: 'row' }}>
+                <Text style={{ fontSize: 23, fontFamily: 'Vazir Medium', fontWeight: '200', alignSelf: 'center' }}>آ</Text>
+                <Slider
+                  style={{ width: '80%', height: 50 }}
+                  thumbTouchSize={{ width: 50, height: 40 }}
+                  maximumValue={3}
+                  value={this.state.fontSizeS}
+                  step={1}
+                  onValueChange={(value) => {
+                    this.setState({ fontSizeS: value });
+                    this.storeFontSize(value);
+                  }}
+                //maximumTrackTintColor='#45f330'
+                //thumbTintColor ='#45f330'
+                />
+                <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', alignSelf: 'center' }}>آ</Text>
+              </View>
               <TouchableOpacity
                 style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
                 onPress={() => this.setState({ dialogVisible: false })}
               >
-                <Text style={{fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10}}>تایید</Text>
+                <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>تایید</Text>
               </TouchableOpacity>
             </View>
           </Dialog>
@@ -606,7 +606,7 @@ class HomeScreen extends React.Component {
       successfulLoad: false,
       aboutDialogVisible: false,
       resourceDialogVisible: false,
-      resetCoursesDialogVisible : false,
+      resetCoursesDialogVisible: false,
     };
   }
 
@@ -738,44 +738,12 @@ class HomeScreen extends React.Component {
             <MenuOptions customStyles={optionsStyles}>
               <MenuOption customStyles={{}}
                 onSelect={navigation.getParam('showResetCoursesDialog')
-                //   () => Alert.alert('شروع درس‌ها از اول', 'آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟',
-                //   [
-                //     {
-                //       text: 'خیر',
-                //       onPress: () => console.log('Cancel Pressed'),
-                //       style: { height: 10 },
-                //     },
-                //     {
-                //       text: 'بله',
-                //       style: { height: 10 },
-                //       onPress: navigation.getParam('resetCourses')
-                //     },
-                //   ],
-                //   //{ cancelable: false },
-                // )
                 } text='شروع درس‌ها از اول'
                 textStyle={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200' }} />
               <MenuOption onSelect={navigation.getParam('showResourceDialog')
-              //   () => Alert.alert('منابع', '1. https://www.pcmag.com\n2. https://en.wikipedia.org\n3. https://tutorialspoint.com',
-              //   [
-              //     {
-              //       text: 'تایید',
-              //       onPress: () => console.log('Confirm Pressed'),
-              //       style: { height: 10 , justifyContent: 'felx-start'},
-              //     },
-              //   ]
-              // )
-            }
+              }
                 disabled={false} text='منابع مورد استفاده' />
               <MenuOption onSelect={navigation.getParam('showAboutDialog')
-              //Alert.alert('درباره', `این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.`,
-                // [
-                //   {
-                //     text: 'تایید',
-                //     onPress: () => console.log('Confirm Pressed'),
-                //     style: { height: 10 },
-                //   },
-                // ])
               }
                 disabled={false} text='درباره' />
             </MenuOptions>
@@ -823,7 +791,6 @@ class HomeScreen extends React.Component {
   componentDidMount() {
     this.loadData();
     this.loadCoursesId();
-    this.props.navigation.setParams({ resetCourses: this._resetCourses });
     this.props.navigation.setParams({ resetFontSize: this._resetFontSize });
     this.props.navigation.setParams({ showAboutDialog: this._showAboutDialog });
     this.props.navigation.setParams({ showResourceDialog: this._showResourceDialog });
@@ -876,86 +843,86 @@ class HomeScreen extends React.Component {
     else
       return (
         <View style={styles.container}>
-                 <Dialog
-                  visible={this.state.resetCoursesDialogVisible}
-                  title="شروع درس‌ها از اول"
-                  titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
-                  onTouchOutside={() => this.setState({ resetCoursesDialogVisible: false })}
-                  onRequestClose={() => this.setState({ resetCoursesDialogVisible: false })}
-                >
-                  <View style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}>
-                    <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
-                    آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟
+          <Dialog
+            visible={this.state.resetCoursesDialogVisible}
+            title="شروع درس‌ها از اول"
+            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            onTouchOutside={() => this.setState({ resetCoursesDialogVisible: false })}
+            onRequestClose={() => this.setState({ resetCoursesDialogVisible: false })}
+          >
+            <View style={{
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+                آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟
                     </Text>
-                    <View style={{flexDirection:'row', alignSelf: 'flex-end' }}>
-                    <TouchableOpacity
-                      style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                      onPress={() => {
-                        this._resetCourses();
-                        this.setState({ resetCoursesDialogVisible: false })
-                        }
-                      }
-                    >
-                      <Text style={{fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10}}>بله</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                      onPress={() => this.setState({ resetCoursesDialogVisible: false })}
-                    >
-                      <Text style={{fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10}}>خیر</Text>
-                    </TouchableOpacity>
-                    </View>
-                  </View>
-                </Dialog>
-                  <Dialog
-                  visible={this.state.resourceDialogVisible}
-                  title="منابع"
-                  titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
-                  onTouchOutside={() => this.setState({ resourceDialogVisible: false })}
-                  onRequestClose={() => this.setState({ resourceDialogVisible: false })}
+              <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
+                <TouchableOpacity
+                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                  onPress={() => {
+                    this._resetCourses();
+                    this.setState({ resetCoursesDialogVisible: false })
+                  }
+                  }
                 >
-                  <View style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}>
-                    <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
-                    1. https://www.pcmag.com 
-                    2.https://en.wikipedia.org
-                    3.https://tutorialspoint.com'
-                    </Text>
-                    <TouchableOpacity
-                      style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                      onPress={() => this.setState({ resourceDialogVisible: false })}
-                    >
-                      <Text style={{fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 10, paddingVertical: 10}}>تایید</Text>
-                    </TouchableOpacity>
-                  </View>
-                </Dialog>
-                  <Dialog
-                  visible={this.state.aboutDialogVisible}
-                  title="درباره"
-                  titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
-                  onTouchOutside={() => this.setState({ aboutDialogVisible: false })}
-                  onRequestClose={() => this.setState({ aboutDialogVisible: false })}
+                  <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>بله</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                  onPress={() => this.setState({ resetCoursesDialogVisible: false })}
                 >
-                  <View style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}>
-                    <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
-                    این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد
+                  <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>خیر</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Dialog>
+          <Dialog
+            visible={this.state.resourceDialogVisible}
+            title="منابع"
+            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            onTouchOutside={() => this.setState({ resourceDialogVisible: false })}
+            onRequestClose={() => this.setState({ resourceDialogVisible: false })}
+          >
+            <View style={{
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+                1.https://www.pcmag.com
+                2.https://en.wikipedia.org
+                3.https://tutorialspoint.com
+              </Text>
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                onPress={() => this.setState({ resourceDialogVisible: false })}
+              >
+                <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 10, paddingVertical: 10 }}>تایید</Text>
+              </TouchableOpacity>
+            </View>
+          </Dialog>
+          <Dialog
+            visible={this.state.aboutDialogVisible}
+            title="درباره"
+            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            onTouchOutside={() => this.setState({ aboutDialogVisible: false })}
+            onRequestClose={() => this.setState({ aboutDialogVisible: false })}
+          >
+            <View style={{
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+                این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد
                     </Text>
-                    <TouchableOpacity
-                      style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                      onPress={() => this.setState({ aboutDialogVisible: false })}
-                    >
-                      <Text style={{fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10}}>تایید</Text>
-                    </TouchableOpacity>
-                  </View>
-                </Dialog>
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                onPress={() => this.setState({ aboutDialogVisible: false })}
+              >
+                <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>تایید</Text>
+              </TouchableOpacity>
+            </View>
+          </Dialog>
           <StatusBar barStyle="light-content" backgroundColor="#468189" />
           <ScrollView
             style={styles.scrollView}
@@ -1084,74 +1051,6 @@ const optionStyles = {
     color: 'black',
   },
 };
-
-// class SideMenu extends React.Component {
-//   navigateToScreen = (route) => () => {
-//     const navigateAction = NavigationActions.navigate({
-//       routeName: route
-//     });
-//     this.props.navigation.dispatch(navigateAction);
-//   }
-
-//   render() {
-//     return (
-//       <View style={styles.container1}>
-//         <ScrollView>
-//           <View>
-//             <Text style={styles.sectionHeadingStyle}>
-//               Section 1
-//             </Text>
-//             <View style={styles.navSectionStyle}>
-//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page1')}>
-//                 تنظیم فونت
-//               </Text>
-//             </View>
-//           </View>
-//           <View>
-//             <Text style={styles.sectionHeadingStyle}>
-//               Section 2
-//             </Text>
-//             <View style={styles.navSectionStyle}>
-//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page2')}>
-//                 Page2
-//               </Text>
-//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page3')}>
-//                 Page3
-//               </Text>
-//             </View>
-//           </View>
-//           <View>
-//             <Text style={styles.sectionHeadingStyle}>
-//               Section 3
-//             </Text>
-//             <View style={styles.navSectionStyle}>
-//               <Text style={styles.navItemStyle} onPress={this.navigateToScreen('Page4')}>
-//                 Page4
-//               </Text>
-//             </View>
-//           </View>
-//         </ScrollView>
-//         <View style={styles.footerContainer}>
-//           <Text>This is my fixed footer</Text>
-//         </View>
-//       </View>
-//     );
-//   }
-// }
-// import PropTypes from 'prop-types';
-
-// SideMenu.propTypes = {
-//   navigation: PropTypes.object
-// };
-
-// const DrawerNav = DrawerNavigator({
-//   Item1: {
-//     screen: RootStack,
-//   }
-// }, {
-//     contentComponent: SideMenu,
-//     drawerWidth: Dimensions.get('window').width - 120,
-//   });
 
 export default class App extends React.Component {
   render() {
@@ -1335,5 +1234,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     color: 'white',
     fontFamily: 'Vazir Medium'
-  }
+  },
+
 });
