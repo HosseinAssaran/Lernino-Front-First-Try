@@ -244,10 +244,8 @@ class PartsScreen extends React.Component {
               />
             </MenuTrigger>
             <MenuOptions customStyles={optionsStyles}>
-              <MenuOption onSelect={
-                navigation.getParam('setFontSize')
-              } text='اندازه قلم'
-              />
+              <MenuOption onSelect={navigation.getParam('setFontSize')} 
+              text='اندازه قلم' />
             </MenuOptions>
           </Menu>
         </View>
@@ -347,7 +345,7 @@ class PartsScreen extends React.Component {
           <Dialog
             visible={this.state.dialogVisible}
             title="اندازه قلم"
-            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            titleStyle={styles.dialogTitle}
             onTouchOutside={() => this.setState({ dialogVisible: false })}
             onRequestClose={() => this.setState({ dialogVisible: false })}
           >
@@ -379,7 +377,7 @@ class PartsScreen extends React.Component {
                 style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
                 onPress={() => this.setState({ dialogVisible: false })}
               >
-                <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>تایید</Text>
+                <Text style={styles.dialogButton}>تایید</Text>
               </TouchableOpacity>
             </View>
           </Dialog>
@@ -736,16 +734,12 @@ class HomeScreen extends React.Component {
               />
             </MenuTrigger>
             <MenuOptions customStyles={optionsStyles}>
-              <MenuOption customStyles={{}}
-                onSelect={navigation.getParam('showResetCoursesDialog')
-                } text='شروع درس‌ها از اول'
-                textStyle={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200' }} />
-              <MenuOption onSelect={navigation.getParam('showResourceDialog')
-              }
-                disabled={false} text='منابع مورد استفاده' />
-              <MenuOption onSelect={navigation.getParam('showAboutDialog')
-              }
-                disabled={false} text='درباره' />
+              <MenuOption onSelect={navigation.getParam('showResetCoursesDialog')} 
+              text='شروع درس‌ها از اول' />
+              <MenuOption onSelect={navigation.getParam('showResourceDialog')} 
+              text='منابع مورد استفاده' />
+              <MenuOption onSelect={navigation.getParam('showAboutDialog')} 
+              text='درباره' />
             </MenuOptions>
           </Menu>
         </View>
@@ -846,7 +840,7 @@ class HomeScreen extends React.Component {
           <Dialog
             visible={this.state.resetCoursesDialogVisible}
             title="شروع درس‌ها از اول"
-            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            titleStyle={styles.dialogTitle}
             onTouchOutside={() => this.setState({ resetCoursesDialogVisible: false })}
             onRequestClose={() => this.setState({ resetCoursesDialogVisible: false })}
           >
@@ -854,7 +848,7 @@ class HomeScreen extends React.Component {
               alignItems: "center",
               justifyContent: "center",
             }}>
-              <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+              <Text style={styles.dialogText}>
                 آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟
                     </Text>
               <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
@@ -866,13 +860,13 @@ class HomeScreen extends React.Component {
                   }
                   }
                 >
-                  <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>بله</Text>
+                  <Text style={styles.dialogButton}>بله</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
                   onPress={() => this.setState({ resetCoursesDialogVisible: false })}
                 >
-                  <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>خیر</Text>
+                  <Text style={styles.dialogButton}>خیر</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -880,7 +874,7 @@ class HomeScreen extends React.Component {
           <Dialog
             visible={this.state.resourceDialogVisible}
             title="منابع"
-            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            titleStyle={styles.dialogTitle}
             onTouchOutside={() => this.setState({ resourceDialogVisible: false })}
             onRequestClose={() => this.setState({ resourceDialogVisible: false })}
           >
@@ -888,7 +882,7 @@ class HomeScreen extends React.Component {
               alignItems: "center",
               justifyContent: "center",
             }}>
-              <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+              <Text style={styles.dialogText}>
                 1.https://www.pcmag.com
                 2.https://en.wikipedia.org
                 3.https://tutorialspoint.com
@@ -897,14 +891,14 @@ class HomeScreen extends React.Component {
                 style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
                 onPress={() => this.setState({ resourceDialogVisible: false })}
               >
-                <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 10, paddingVertical: 10 }}>تایید</Text>
+                <Text style={styles.dialogButton}>تایید</Text>
               </TouchableOpacity>
             </View>
           </Dialog>
           <Dialog
             visible={this.state.aboutDialogVisible}
             title="درباره"
-            titleStyle={{ fontSize: 20, fontFamily: 'Vazir Medium', fontWeight: '200', }}
+            titleStyle={styles.dialogTitle}
             onTouchOutside={() => this.setState({ aboutDialogVisible: false })}
             onRequestClose={() => this.setState({ aboutDialogVisible: false })}
           >
@@ -912,14 +906,14 @@ class HomeScreen extends React.Component {
               alignItems: "center",
               justifyContent: "center",
             }}>
-              <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', }}>
+              <Text style={styles.dialogText}>
                 این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد
                     </Text>
               <TouchableOpacity
                 style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
                 onPress={() => this.setState({ aboutDialogVisible: false })}
               >
-                <Text style={{ fontSize: 14, fontFamily: 'Vazir Medium', fontWeight: '200', paddingHorizontal: 20, paddingVertical: 10 }}>تایید</Text>
+                <Text style={styles.dialogButton}>تایید</Text>
               </TouchableOpacity>
             </View>
           </Dialog>
@@ -980,6 +974,16 @@ const RootStack = createStackNavigator(
   }
 )
 
+export default class App extends React.Component {
+  render() {
+    return (
+      <MenuProvider>
+        <RootStack />
+      </MenuProvider>
+    );
+  }
+}
+
 const triggerStyles = {
   triggerText: {
     color: 'white',
@@ -1016,14 +1020,11 @@ const triggerStyles = {
 
 const optionsStyles = {
   optionsContainer: {
-    //backgroundColor: 'green',
     padding: 5,
   },
   optionsWrapper: {
-    //backgroundColor: 'purple',
   },
   optionWrapper: {
-    //backgroundColor: 'yellow',
     margin: 5,
   },
   optionTouchable: {
@@ -1034,7 +1035,6 @@ const optionsStyles = {
     fontSize: 16,
     fontFamily: 'Vazir Medium',
     fontWeight: '200',
-    //color: 'brown',
   },
 };
 
@@ -1051,16 +1051,6 @@ const optionStyles = {
     color: 'black',
   },
 };
-
-export default class App extends React.Component {
-  render() {
-    return (
-      <MenuProvider>
-        <RootStack />
-      </MenuProvider>
-    );
-  }
-}
 
 const styles = StyleSheet.create({
   // navItemStyle: {
@@ -1235,5 +1225,21 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'Vazir Medium'
   },
-
+  dialogButton: {
+    fontSize: 14,
+    fontFamily: 'Vazir Medium',
+    fontWeight: '200',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  dialogText: {
+    fontSize: 14,
+    fontFamily: 'Vazir Medium',
+    fontWeight: '200',
+  },
+  dialogTitle: {
+    fontSize: 20,
+    fontFamily: 'Vazir Medium',
+    fontWeight: '200',
+  }
 });
