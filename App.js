@@ -11,7 +11,7 @@ import { Dialog } from 'react-native-simple-dialogs';
 
 const FontSizeName = ['ریز', 'معمولی', 'بزرگ', 'خیلی بزرگ'];
 const baseAddress = 'http://rest.lernino.com';
-//const baseAddress = 'http://192.168.1.102:8000';
+//const baseAddress = 'http://192.168.43.78:8000';
 const masterRelativeAddress = '/api/schools/1'
 const widthWin = Dimensions.get('window').width
 const heightWin = Dimensions.get('window').height
@@ -37,7 +37,10 @@ function fetchData(address) {
   });
 }
 
+var Courses;
+var Lessons;
 var coursesIdPassed = [];
+var lessonsIdPassed = [];
 
 function CircleButton(props) {
   return (
@@ -55,8 +58,6 @@ function CircleButton(props) {
     </View>
   );
 }
-
-var lessonsIdPassed = [];
 
 function SquareButton(props) {
   return (
@@ -188,7 +189,7 @@ class TabInParts extends React.Component {
   _handleIndexChange = index => {
     this.setState({ index });
     if (index === this.props.routes.length - 1)
-      this.props.isLastTabClicked(true);
+      this.props.lastTabClicked();
     // else
     //   this.props.isLastTabClicked(false);
   };
@@ -214,7 +215,6 @@ class PartsScreen extends React.Component {
     super(props);
     this.goBack = this.goBack.bind(this);
     this.state = {
-      partsRelativeAddress: null,
       data: [],
       error: [],
       isLoading: true,
@@ -244,8 +244,8 @@ class PartsScreen extends React.Component {
               />
             </MenuTrigger>
             <MenuOptions customStyles={optionsStyles}>
-              <MenuOption onSelect={navigation.getParam('setFontSize')} 
-              text='اندازه قلم' />
+              <MenuOption onSelect={navigation.getParam('setFontSize')}
+                text='اندازه قلم' />
             </MenuOptions>
           </Menu>
         </View>
@@ -253,11 +253,50 @@ class PartsScreen extends React.Component {
     };
   };
 
+
+  loadItems = async (address) => {
+    try {
+      const jsonOfflineItems = await AsyncStorage.getItem(address);
+      if (jsonOfflineItems != null) {
+        const offlineItems = JSON.parse(jsonOfflineItems)
+        return offlineItems;
+      }
+      else {
+        return null;
+      }
+    }
+    catch (error) {
+      Alert.alert(error.toString());
+    }
+  }
+
+  saveItems = (data, address) => {
+    AsyncStorage.setItem(address, JSON.stringify(data));
+  }
+
   loadData() {
     this.setState({ isLoading: true });
-    fetchData(baseAddress + partsRelativeAddress)
-      .then(((parsedRes) => this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })),
-        ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
+    const relativeAddress = this.props.navigation.getParam('itemAddress', 'Null');
+    fetchData(baseAddress + relativeAddress)
+      .then(((parsedRes) => {
+        this.saveItems(parsedRes, relativeAddress);
+        this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+        //If data length is 1, Suppose as readed
+        if (parsedRes.length === 1) {
+          this.saveItemId();
+        }
+      }),
+        ((rejectedRes) => {
+          this.loadItems(relativeAddress)
+            .then((offlineData) => {
+              if (offlineData != null) {
+                this.setState({ data: offlineData, isLoading: false, successfulLoad: true })
+              }
+              else {
+                this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false })
+              }
+            })
+        })
       );
   }
 
@@ -304,34 +343,31 @@ class PartsScreen extends React.Component {
     this.props.navigation.goBack();
   }
 
-  lastTabClicked = (isLastTab) => {
-    this.setState({ isLastTab: isLastTab });
-    // Alert.alert(isLastTab.toString()) ;
+  lastTabClicked = () => {
+    this.saveItemId();
+    //Alert.alert(itemId.toString());    
   }
 
-  saveItemId(itemId) {
+  saveItemId() {
+    itemId = this.props.navigation.getParam('itemId', 0);
     if (lessonsIdPassed.indexOf(itemId) === -1) {
       lessonsIdPassed.push(itemId)
-      AsyncStorage.setItem('itemId', JSON.stringify(lessonsIdPassed));
-      this.props.navigation.state.params.refresh();
+      this.props.navigation.state.params.needUpdate();
+      AsyncStorage.setItem('lessonItemId', JSON.stringify(lessonsIdPassed))
+      //.then(Alert.alert('save id ' + lessonsIdPassed.toString()))
     }
     else
+      //Alert.alert('Id '+ lessonsIdPassed.toString() +  'already exists')
       console.log("This item already exists");
   }
 
   componentWillUnmount() {
-    itemId = this.props.navigation.getParam('itemId', 0);
-    if (this.state.isLastTab === true || this.state.data.length === 1) {
-      this.saveItemId(itemId);
-      // Alert.alert(itemId.toString());    
-    }
+
   }
 
   render() {
     const successfulLoad = this.state.successfulLoad;
     const isLoading = this.state.isLoading;
-    const { navigation } = this.props;
-    partsRelativeAddress = navigation.getParam('itemAddress', 'Null');
 
     if (isLoading)
       return (
@@ -385,7 +421,7 @@ class PartsScreen extends React.Component {
           {successfulLoad && this.state.data.length > 0 ?
             <TabInParts
               backToLessonHandler={this.goBack}
-              isLastTabClicked={this.lastTabClicked}
+              lastTabClicked={this.lastTabClicked}
               cardFontSize={this.state.fontSizeS}
               routes={this.state.data} /> :
             <View style={styles.errorView}>
@@ -408,17 +444,20 @@ class PartsScreen extends React.Component {
         </View>
       );
   }
+
 }
+import { NavigationEvents } from 'react-navigation';
 
 class LessonsScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      lessonsRelativeAddress: null,
       data: [],
       error: [],
       isLoading: true,
       successfulLoad: false,
+      testCount: 0,
+      needUpdate: false,
     };
   }
 
@@ -470,7 +509,10 @@ class LessonsScreen extends React.Component {
 
   _rerender = () => {
     this.setState({});
-    // Alert.alert('lesson is paseed.');    
+  }
+
+  _needUpdate = () => {
+    this.setState({ needUpdate: true })
   }
 
   navigate = (itemId, itemTitle, itemAddress) => {
@@ -478,43 +520,120 @@ class LessonsScreen extends React.Component {
       itemId: itemId,
       itemTitle: itemTitle,
       itemAddress: itemAddress,
+      needUpdate: this._needUpdate,
       refresh: this._rerender,
     })
   }
 
+  loadItems = async (address) => {
+    try {
+      const jsonOfflineItems = await AsyncStorage.getItem(address);
+      if (jsonOfflineItems != null) {
+        const offlineItems = JSON.parse(jsonOfflineItems)
+        return offlineItems;
+      }
+      else {
+        return null;
+      }
+    }
+    catch (error) {
+      Alert.alert(error.toString());
+    }
+  }
+
+  saveItems = (data, address) => {
+    AsyncStorage.setItem(address, JSON.stringify(data));
+  }
+
+  showItems = (data) => {
+    Lessons = this.renderSquares(data);
+    this.state.testCount++;
+    //Alert.alert(this.state.testCount.toString())
+  }
+
   loadData() {
     this.setState({ isLoading: true });
-    fetchData(baseAddress + lessonsRelativeAddress)
-      .then(((parsedRes) => this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })),
-        ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
+    const relativeAddress = this.props.navigation.getParam('itemAddress', 'Null');
+    fetchData(baseAddress + relativeAddress)
+      .then(((parsedRes) => {
+        this.saveItems(parsedRes, relativeAddress);
+        this.showItems(parsedRes)
+        this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+      }),
+        ((rejectedRes) => {
+          this.loadItems(relativeAddress)
+            .then((offlineData) => {
+              if (offlineData != null) {
+                this.showItems(offlineData)
+                this.setState({ data: offlineData, isLoading: false, successfulLoad: true })
+              }
+              else {
+                this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false })
+              }
+            })
+        })
       );
+  }
+
+  updateChangesOnFocus = () => {
+    this.focusListener = this.props.navigation.addListener("willFocus", () => {
+      if (this.state.needUpdate == true) {
+        if (this.state.data != null)
+          this.showItems(this.state.data);
+        this.setState({ needUpdate: false });
+        this.checkIfCoursePassed();
+      }
+      //Alert.alert('will Focus')
+    });
+  }
+
+  clearUpdateChangesOnFocus = () => {
+    this.focusListener.remove();
   }
 
   componentDidMount() {
     this.loadData();
     this.loadLessonsId();
+    this.updateChangesOnFocus();
   }
 
   loadLessonsId = async () => {
     try {
-      const itemIds = await AsyncStorage.getItem('itemId');
+      const itemIds = await AsyncStorage.getItem('lessonItemId');
       if (itemIds != null)
         lessonsIdPassed = JSON.parse(itemIds);
-      // Alert.alert(itemIds);
     }
     catch (error) {
-      // Alert.alert(error)
     }
   }
 
   saveCourseId(itemId) {
     if (coursesIdPassed.indexOf(itemId) === -1) {
       coursesIdPassed.push(itemId)
-      AsyncStorage.setItem('courseItemId', JSON.stringify(coursesIdPassed));
-      this.props.navigation.state.params.refresh();
+      this.props.navigation.state.params.needUpdate();
+      AsyncStorage.setItem('courseItemId', JSON.stringify(coursesIdPassed))
+      //this.props.navigation.state.params.refresh();
     }
     else
       console.log("This item already exists");
+  }
+
+  checkIfCoursePassed = () => {
+    let itemId = this.props.navigation.getParam('itemId', 0);
+    let lessonsCount = this.props.navigation.getParam('itemLessonsCount', 0);
+    if (coursesIdPassed.indexOf(itemId) === -1) {
+      let countLessonPassed = 0;
+      for (let data of this.state.data) {
+        if (lessonsIdPassed.indexOf(data.id) != -1) {
+          countLessonPassed++;
+        }
+      }
+      if (countLessonPassed === lessonsCount && lessonsCount != 0) {//this.state.data.length && this.state.data.length != 0) {
+        Alert.alert('تبریک!', 'شما این دوره رو با موفقیت گذروندید.');
+        // Alert.alert('You Passed ' + countLessonPassed.toString() + ' Of ' + this.state.data.length.toString());    
+        this.saveCourseId(itemId);
+      }
+    }
   }
 
   _onRefresh = () => {
@@ -523,35 +642,12 @@ class LessonsScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    let itemId = this.props.navigation.getParam('itemId', 0);
-    let lessonsCount = this.props.navigation.getParam('itemLessonsCount', 0);
-    if (coursesIdPassed.indexOf(itemId) === -1) {
-      let coursePassed = false;
-      let countLessonPassed = 0;
-      for (let data of this.state.data) {
-        if (lessonsIdPassed.indexOf(data.id) != -1) {
-          countLessonPassed++;
-        }
-      }
-      if (countLessonPassed === lessonsCount && lessonsCount != 0) {//this.state.data.length && this.state.data.length != 0) {
-        coursePassed = true;
-        Alert.alert('تبریک!', 'شما این دوره رو با موفقیت گذروندید.');
-      }
-      // Alert.alert('You Passed ' + countLessonPassed.toString() + ' Of ' + this.state.data.length.toString());    
-      if (coursePassed === true) {
-        this.saveCourseId(itemId);
-      }
-    }
+    this.clearUpdateChangesOnFocus();
   }
 
   render() {
-    const { navigation } = this.props;
     const isLoading = this.state.isLoading;
     const successfulLoad = this.state.successfulLoad;
-    lessonsRelativeAddress = navigation.getParam('itemAddress', 'Null');
-
-    if (successfulLoad == true)
-      var Lessons = this.renderSquares(this.state.data);
 
     if (isLoading == true)
       return (
@@ -594,6 +690,7 @@ class LessonsScreen extends React.Component {
       );
   }
 }
+
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -605,6 +702,7 @@ class HomeScreen extends React.Component {
       aboutDialogVisible: false,
       resourceDialogVisible: false,
       resetCoursesDialogVisible: false,
+      needUpdate: false,
     };
   }
 
@@ -706,7 +804,7 @@ class HomeScreen extends React.Component {
   }
 
   static navigationOptions = ({ navigation }) => {
-    const { params = {} } = navigation.state;
+    //const { params = {} } = navigation.state;
     return {
       headerTitle: <LogoTitle />,
       //drawerLabel: 'Home',
@@ -717,10 +815,11 @@ class HomeScreen extends React.Component {
       //   />),
       // headerLeft: (
       //   <View>
-      //     <Button
-      //       onPress={navigation.getParam('resetFontSize')}
-      //       title='Reset'
-      //     />
+      //     <TouchableOpacity
+      //       onPress={navigation.getParam('resetStorage')}
+      //     >
+      //       <Text style={{}}>ریست</Text>
+      //     </TouchableOpacity>
       //   </View>
       // ),
       headerRight: (
@@ -734,12 +833,12 @@ class HomeScreen extends React.Component {
               />
             </MenuTrigger>
             <MenuOptions customStyles={optionsStyles}>
-              <MenuOption onSelect={navigation.getParam('showResetCoursesDialog')} 
-              text='شروع درس‌ها از اول' />
-              <MenuOption onSelect={navigation.getParam('showResourceDialog')} 
-              text='منابع مورد استفاده' />
-              <MenuOption onSelect={navigation.getParam('showAboutDialog')} 
-              text='درباره' />
+              <MenuOption onSelect={navigation.getParam('showResetCoursesDialog')}
+                text='شروع درس‌ها از اول' />
+              <MenuOption onSelect={navigation.getParam('showResourceDialog')}
+                text='منابع مورد استفاده' />
+              <MenuOption onSelect={navigation.getParam('showAboutDialog')}
+                text='درباره' />
             </MenuOptions>
           </Menu>
         </View>
@@ -752,21 +851,67 @@ class HomeScreen extends React.Component {
     // Alert.alert('course is paseed.')
   }
 
+  _needUpdate = () => {
+    this.setState({ needUpdate: true })
+  }
+
   navigate = (itemId, itemTitle, itemAddress, itemLessonsCount) => {
     this.props.navigation.push('Lessons', {
       itemId: itemId,
       itemTitle: itemTitle,
       itemAddress: itemAddress,
       itemLessonsCount: itemLessonsCount,
+      needUpdate: this._needUpdate,
       refresh: this._rerender,
     })
   }
 
+  loadItems = async (address) => {
+    try {
+      const jsonOfflineItems = await AsyncStorage.getItem(address);
+      if (jsonOfflineItems != null) {
+        const offlineItems = JSON.parse(jsonOfflineItems)
+        return offlineItems;
+      }
+      else {
+        return null;
+      }
+    }
+    catch (error) {
+      Alert.alert(error.toString());
+    }
+  }
+
+  saveItems = (data, address) => {
+    AsyncStorage.setItem(address, JSON.stringify(data));
+  }
+
+  //@todo We can add checks before and setState to this item.
+  showItems = (data) => {
+    Courses = this.renderCircle(data, this.props.navigation);
+  }
+
   loadData() {
     this.setState({ isLoading: true });
-    fetchData(baseAddress + masterRelativeAddress)
-      .then(((parsedRes) => this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })),
-        ((rejectedRes) => this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false }))
+    const relativeAddress = masterRelativeAddress;
+    fetchData(baseAddress + relativeAddress)
+      .then(((parsedRes) => {
+        this.saveItems(parsedRes, relativeAddress);
+        this.showItems(parsedRes)
+        this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+      }),
+        ((rejectedRes) => {
+          this.loadItems(relativeAddress)
+            .then((offlineData) => {
+              if (offlineData != null) {
+                this.showItems(offlineData)
+                this.setState({ data: offlineData, isLoading: false, successfulLoad: true })
+              }
+              else {
+                this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false })
+              }
+            })
+        })
       );
   }
 
@@ -782,13 +927,33 @@ class HomeScreen extends React.Component {
     this.setState({ resetCoursesDialogVisible: true });
   }
 
+  updateChangesOnFocus = () => {
+    this.focusListener = this.props.navigation.addListener("willFocus", () => {
+      if (this.state.needUpdate == true) {
+        if (this.state.data != null)
+          this.showItems(this.state.data);
+        this.setState({ needUpdate: false });
+      }
+      //Alert.alert('will Focus')
+    });
+  }
+
+  clearUpdateChangesOnFocus = () => {
+    this.focusListener.remove();
+  }
+
   componentDidMount() {
     this.loadData();
     this.loadCoursesId();
-    this.props.navigation.setParams({ resetFontSize: this._resetFontSize });
+    this.updateChangesOnFocus();
+    this.props.navigation.setParams({ resetStorage: this._resetStorage });
     this.props.navigation.setParams({ showAboutDialog: this._showAboutDialog });
     this.props.navigation.setParams({ showResourceDialog: this._showResourceDialog });
     this.props.navigation.setParams({ showResetCoursesDialog: this._showResetCoursesDialog });
+  }
+
+  componentWillUnmount() {
+    this.clearUpdateChangesOnFocus();
   }
 
   loadCoursesId = async () => {
@@ -796,10 +961,9 @@ class HomeScreen extends React.Component {
       const itemIds = await AsyncStorage.getItem('courseItemId');
       if (itemIds != null)
         coursesIdPassed = JSON.parse(itemIds);
-      // Alert.alert(itemIds);
     }
     catch (error) {
-      // Alert.alert(error)
+      Alert.alert(error)
     }
   }
 
@@ -808,11 +972,17 @@ class HomeScreen extends React.Component {
     this.loadCoursesId();
   }
 
+  _resetStorage = () => {
+    AsyncStorage.clear().then(Alert.alert('storage cleaned'))
+  }
+
   _resetCourses = () => {
     coursesIdPassed = [];
     AsyncStorage.setItem('courseItemId', JSON.stringify(coursesIdPassed));
     lessonsIdPassed = [];
-    AsyncStorage.setItem('itemId', JSON.stringify(lessonsIdPassed));
+    AsyncStorage.setItem('lessonItemId', JSON.stringify(lessonsIdPassed));
+    if (this.state.data != null)
+      this.showItems(this.state.data);
     this.setState({});
   };
 
@@ -821,103 +991,97 @@ class HomeScreen extends React.Component {
   }
 
   render() {
-    const { navigation } = this.props;
     const successfulLoad = this.state.successfulLoad;
     const isLoading = this.state.isLoading;
-    if (successfulLoad == true)
-      var Courses = this.renderCircle(this.state.data, navigation);
 
-    if (isLoading == true) {
-      return (
-        <View style={[styles.activityIndicator]}>
-          <ActivityIndicator size="large" color="#000000" />
-        </View>
-      );
-    }
-    else
-      return (
-        <View style={styles.container}>
-          <Dialog
-            visible={this.state.resetCoursesDialogVisible}
-            title="شروع درس‌ها از اول"
-            titleStyle={styles.dialogTitle}
-            onTouchOutside={() => this.setState({ resetCoursesDialogVisible: false })}
-            onRequestClose={() => this.setState({ resetCoursesDialogVisible: false })}
-          >
-            <View style={{
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Text style={styles.dialogText}>
-                آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟
+    return (
+      <View style={styles.container}>
+        <Dialog
+          visible={this.state.resetCoursesDialogVisible}
+          title="شروع درس‌ها از اول"
+          titleStyle={styles.dialogTitle}
+          onTouchOutside={() => this.setState({ resetCoursesDialogVisible: false })}
+          onRequestClose={() => this.setState({ resetCoursesDialogVisible: false })}
+        >
+          <View style={{
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Text style={styles.dialogText}>
+              آیا مطمئن هستید که می‌خواهید درس‌ها را از اول شروع کنید؟
                     </Text>
-              <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
-                <TouchableOpacity
-                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                  onPress={() => {
-                    this._resetCourses();
-                    this.setState({ resetCoursesDialogVisible: false })
-                  }
-                  }
-                >
-                  <Text style={styles.dialogButton}>بله</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                  onPress={() => this.setState({ resetCoursesDialogVisible: false })}
-                >
-                  <Text style={styles.dialogButton}>خیر</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                onPress={() => {
+                  this._resetCourses();
+                  this.setState({ resetCoursesDialogVisible: false })
+                }
+                }
+              >
+                <Text style={styles.dialogButton}>بله</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                onPress={() => this.setState({ resetCoursesDialogVisible: false })}
+              >
+                <Text style={styles.dialogButton}>خیر</Text>
+              </TouchableOpacity>
             </View>
-          </Dialog>
-          <Dialog
-            visible={this.state.resourceDialogVisible}
-            title="منابع"
-            titleStyle={styles.dialogTitle}
-            onTouchOutside={() => this.setState({ resourceDialogVisible: false })}
-            onRequestClose={() => this.setState({ resourceDialogVisible: false })}
-          >
-            <View style={{
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Text style={styles.dialogText}>
-                1.https://www.pcmag.com
-                2.https://en.wikipedia.org
-                3.https://tutorialspoint.com
+          </View>
+        </Dialog>
+        <Dialog
+          visible={this.state.resourceDialogVisible}
+          title="منابع"
+          titleStyle={styles.dialogTitle}
+          onTouchOutside={() => this.setState({ resourceDialogVisible: false })}
+          onRequestClose={() => this.setState({ resourceDialogVisible: false })}
+        >
+          <View style={{
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Text style={styles.dialogText}>
+              1.https://www.pcmag.com
+              2.https://en.wikipedia.org
+              3.https://tutorialspoint.com
               </Text>
-              <TouchableOpacity
-                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                onPress={() => this.setState({ resourceDialogVisible: false })}
-              >
-                <Text style={styles.dialogButton}>تایید</Text>
-              </TouchableOpacity>
-            </View>
-          </Dialog>
-          <Dialog
-            visible={this.state.aboutDialogVisible}
-            title="درباره"
-            titleStyle={styles.dialogTitle}
-            onTouchOutside={() => this.setState({ aboutDialogVisible: false })}
-            onRequestClose={() => this.setState({ aboutDialogVisible: false })}
-          >
-            <View style={{
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Text style={styles.dialogText}>
-                این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد
+            <TouchableOpacity
+              style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+              onPress={() => this.setState({ resourceDialogVisible: false })}
+            >
+              <Text style={styles.dialogButton}>تایید</Text>
+            </TouchableOpacity>
+          </View>
+        </Dialog>
+        <Dialog
+          visible={this.state.aboutDialogVisible}
+          title="درباره"
+          titleStyle={styles.dialogTitle}
+          onTouchOutside={() => this.setState({ aboutDialogVisible: false })}
+          onRequestClose={() => this.setState({ aboutDialogVisible: false })}
+        >
+          <View style={{
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Text style={styles.dialogText}>
+              این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد
                     </Text>
-              <TouchableOpacity
-                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                onPress={() => this.setState({ aboutDialogVisible: false })}
-              >
-                <Text style={styles.dialogButton}>تایید</Text>
-              </TouchableOpacity>
-            </View>
-          </Dialog>
-          <StatusBar barStyle="light-content" backgroundColor="#468189" />
+            <TouchableOpacity
+              style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+              onPress={() => this.setState({ aboutDialogVisible: false })}
+            >
+              <Text style={styles.dialogButton}>تایید</Text>
+            </TouchableOpacity>
+          </View>
+        </Dialog>
+        <StatusBar barStyle="light-content" backgroundColor="#468189" />
+        {isLoading == true ?
+          <View style={[styles.activityIndicator]}>
+            <ActivityIndicator size="large" color="#000000" />
+          </View>
+          :
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.contentScrollView}
@@ -938,14 +1102,14 @@ class HomeScreen extends React.Component {
                 />
               </View>}
           </ScrollView>
-          {/* <View style={{ backgroundColor: '#607c3a' }}>
+        }
+        {/* <View style={{ backgroundColor: '#607c3a' }}>
             <Text style={styles.infoText}>
               کاری از گروه نرم افزاری فیبوک رایانه
           </Text>
           </View> */}
-        </View>
-        // </MyDialog>
-      );
+      </View>
+    );
   }
 }
 
