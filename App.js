@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { ActivityIndicator, Slider, AsyncStorage, StyleSheet, Text, Alert, View, Button, TouchableOpacity, TouchableHighlight, I18nManager, ScrollView, Image, ImageBackground, Dimensions, SafeAreaView, StatusBar, RefreshControl } from 'react-native';
+import {
+  ActivityIndicator, Slider, AsyncStorage, StyleSheet, Text, Alert,
+  View, Button, TouchableOpacity, TouchableHighlight, I18nManager,
+  ScrollView, Image, Dimensions, SafeAreaView, StatusBar, RefreshControl,
+  BackHandler, Linking
+} from 'react-native';
 import { createStackNavigator } from 'react-navigation';
 import { TabView, TabBar } from 'react-native-tab-view';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -8,11 +13,13 @@ import { MenuProvider } from 'react-native-popup-menu';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import IconMat from 'react-native-vector-icons/MaterialIcons'
 import { Dialog } from 'react-native-simple-dialogs';
+import VersionNumber from 'react-native-version-number';
 
 const FontSizeName = ['ریز', 'معمولی', 'بزرگ', 'خیلی بزرگ'];
 const baseAddress = 'http://rest.lernino.com';
 //const baseAddress = 'http://192.168.43.78:8000';
-const masterRelativeAddress = '/api/schools/1'
+var masterRelativeAddress;
+const checkUpdateRelativeAddress = '/api/schools'
 const widthWin = Dimensions.get('window').width
 const heightWin = Dimensions.get('window').height
 
@@ -446,7 +453,6 @@ class PartsScreen extends React.Component {
   }
 
 }
-import { NavigationEvents } from 'react-navigation';
 
 class LessonsScreen extends React.Component {
   constructor(props) {
@@ -702,7 +708,10 @@ class HomeScreen extends React.Component {
       aboutDialogVisible: false,
       resourceDialogVisible: false,
       resetCoursesDialogVisible: false,
+      updateDialogVisible: false,
       needUpdate: false,
+      schoolData: {},
+      forceUpdate: false,
     };
   }
 
@@ -894,23 +903,74 @@ class HomeScreen extends React.Component {
   loadData() {
     this.setState({ isLoading: true });
     const relativeAddress = masterRelativeAddress;
+    if (this.state.forceUpdate == false)
+      fetchData(baseAddress + relativeAddress)
+        .then(((parsedRes) => {
+          this.saveItems(parsedRes, relativeAddress);
+          this.showItems(parsedRes)
+          this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+        }),
+          ((rejectedRes) => {
+            this.loadItems(relativeAddress)
+              .then((loadedData) => {
+                if (loadedData != null) {
+                  this.showItems(loadedData)
+                  this.setState({ data: loadedData, isLoading: false, successfulLoad: true })
+                }
+                else {
+                  this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false })
+                }
+              })
+          })
+        );
+
+  }
+
+  appDeprecated = () => {
+    Alert.alert(
+      'خطا',
+      'مشکلی رخ داده است. در صورت انجام به‌روزرسانی و مشاهده دوباره این پیغام به ما اطلاع دهید.',
+      [
+        { text: 'خروج', onPress: () => BackHandler.exitApp() },
+      ],
+      { cancelable: false },
+    )
+  }
+  checkUpdate = () => {
+    const relativeAddress = checkUpdateRelativeAddress;
+    const currentAppVersion = VersionNumber.appVersion.toString()
+    let findSlug = false;
     fetchData(baseAddress + relativeAddress)
       .then(((parsedRes) => {
-        this.saveItems(parsedRes, relativeAddress);
-        this.showItems(parsedRes)
-        this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+        for (let schoolData of parsedRes) {
+          if (schoolData.slug === 'CMP_SCH') {
+            findSlug = true;
+            masterRelativeAddress = schoolData.relative_address;
+            this.loadData();
+            if (schoolData.app_last_version > currentAppVersion) {
+              const forceUpdate = schoolData.app_support_version > currentAppVersion ? true : false;
+              AsyncStorage.setItem('schoolData', JSON.stringify(schoolData));
+              this.setState({ schoolData: schoolData, updateDialogVisible: true, forceUpdate: forceUpdate })
+            }
+          }
+        }
+        if (findSlug === false) {
+          this.appDeprecated()
+        }
       }),
         ((rejectedRes) => {
-          this.loadItems(relativeAddress)
-            .then((offlineData) => {
-              if (offlineData != null) {
-                this.showItems(offlineData)
-                this.setState({ data: offlineData, isLoading: false, successfulLoad: true })
+          AsyncStorage.getItem('schoolData')
+            .then((schoolData) => {
+              if (schoolData != null) {
+                let schoolDataParsed = JSON.parse(schoolData);
+                const forceUpdate = schoolDataParsed.app_support_version > currentAppVersion ? true : false;
+                this.setState({ schoolData: schoolDataParsed, updateDialogVisible: true, forceUpdate: forceUpdate })
               }
               else {
-                this.setState({ error: rejectedRes, isLoading: false, successfulLoad: false })
+                this.appDeprecated()
               }
-            })
+            });
+          // Alert.alert(rejectedRes)
         })
       );
   }
@@ -927,23 +987,37 @@ class HomeScreen extends React.Component {
     this.setState({ resetCoursesDialogVisible: true });
   }
 
+  componentWillFocus = () => {
+    if (this.state.needUpdate == true) {
+      if (this.state.data != null)
+        this.showItems(this.state.data);
+      this.setState({ needUpdate: false });
+    }
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
+  }
+
   updateChangesOnFocus = () => {
-    this.focusListener = this.props.navigation.addListener("willFocus", () => {
-      if (this.state.needUpdate == true) {
-        if (this.state.data != null)
-          this.showItems(this.state.data);
-        this.setState({ needUpdate: false });
-      }
-      //Alert.alert('will Focus')
-    });
+    this.focusListener = [this.props.navigation.addListener("willFocus", this.componentWillFocus),
+    this.props.navigation.addListener("willBlur", this.componentWillBlur),]
+    //Alert.alert('will Focus')
+  }
+
+  componentWillBlur = () => {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
   }
 
   clearUpdateChangesOnFocus = () => {
     this.focusListener.remove();
   }
 
+  handleBackPress = () => {
+    BackHandler.exitApp()
+    return true;
+  }
+
   componentDidMount() {
-    this.loadData();
+    this.checkUpdate();
+    //this.loadData();
     this.loadCoursesId();
     this.updateChangesOnFocus();
     this.props.navigation.setParams({ resetStorage: this._resetStorage });
@@ -973,7 +1047,13 @@ class HomeScreen extends React.Component {
   }
 
   _resetStorage = () => {
-    AsyncStorage.clear().then(Alert.alert('storage cleaned'))
+    AsyncStorage.clear()
+      .then(() => {
+        //this.showItems(this.state.data)
+        this.setState({ successfulLoad: false })
+        //Alert.alert("clean")
+      }
+      );
   }
 
   _resetCourses = () => {
@@ -990,12 +1070,60 @@ class HomeScreen extends React.Component {
     AsyncStorage.removeItem('fontSizeStored');
   }
 
+  _updateApp = () => {
+    Linking.openURL(this.state.schoolData.app_address)
+  }
+
   render() {
     const successfulLoad = this.state.successfulLoad;
     const isLoading = this.state.isLoading;
 
     return (
       <View style={styles.container}>
+        <Dialog
+          visible={this.state.updateDialogVisible}
+          title="به‌روزرسانی"
+          titleStyle={styles.dialogTitle}
+          onTouchOutside={() => this.setState({ updateDialogVisible: this.state.forceUpdate })}
+          onRequestClose={() => this.state.forceUpdate ? BackHandler.exitApp() : this.setState({ updateDialogVisible: false })}
+        >
+          <View style={{
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Text style={styles.dialogText}>
+              {this.state.schoolData.app_update_message}
+            </Text>
+            <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                onPress={() => {
+                  this._updateApp();
+                  BackHandler.exitApp();
+                  //this.setState({ updateDialogVisible: false })
+                }
+                }
+              >
+                <Text style={styles.dialogButton}>به‌روزرسانی</Text>
+              </TouchableOpacity>
+              {this.state.forceUpdate ?
+                <TouchableOpacity
+                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                  onPress={() => BackHandler.exitApp()}
+                >
+                  <Text style={styles.dialogButton}>خروج</Text>
+                </TouchableOpacity>
+                :
+                <TouchableOpacity
+                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                  onPress={() => this.setState({ updateDialogVisible: false })}
+                >
+                  <Text style={styles.dialogButton}>بعداً</Text>
+                </TouchableOpacity>
+              }
+            </View>
+          </View>
+        </Dialog>
         <Dialog
           visible={this.state.resetCoursesDialogVisible}
           title="شروع درس‌ها از اول"
@@ -1045,7 +1173,7 @@ class HomeScreen extends React.Component {
               1.https://www.pcmag.com
               2.https://en.wikipedia.org
               3.https://tutorialspoint.com
-              </Text>
+            </Text>
             <TouchableOpacity
               style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
               onPress={() => this.setState({ resourceDialogVisible: false })}
@@ -1076,6 +1204,7 @@ class HomeScreen extends React.Component {
             </TouchableOpacity>
           </View>
         </Dialog>
+
         <StatusBar barStyle="light-content" backgroundColor="#468189" />
         {isLoading == true ?
           <View style={[styles.activityIndicator]}>
