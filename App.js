@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Slider, AsyncStorage, StyleSheet, Text, Alert,
   View, Button, TouchableOpacity, TouchableHighlight, I18nManager,
   ScrollView, Image, Dimensions, SafeAreaView, StatusBar, RefreshControl,
-  BackHandler, Linking
+  BackHandler, Linking, Platform
 } from 'react-native';
 import { createStackNavigator } from 'react-navigation';
 import { TabView, TabBar } from 'react-native-tab-view';
@@ -19,13 +19,23 @@ const FontSizeName = ['ریز', 'معمولی', 'بزرگ', 'خیلی بزرگ']
 const baseAddress = 'http://rest.lernino.com';
 //const baseAddress = 'http://192.168.43.78:8000';
 var masterRelativeAddress;
-const checkUpdateRelativeAddress = '/api/schools'
+const firstRelativeAddress = '/api/school_info'
 const widthWin = Dimensions.get('window').width
 const heightWin = Dimensions.get('window').height
+const school_slug = 'CMP_SCH'
 
 function fetchData(address) {
   return new Promise((resolve, reject) => {
-    fetch(address)
+    fetch(address, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'School': school_slug,
+        'App-Version': VersionNumber.appVersion.toString(),
+        'App-Device': Platform.OS,
+      }
+    })
       .then((response) => {
         if (response.ok) {
           return resolve(response.json());
@@ -217,6 +227,72 @@ class TabInParts extends React.Component {
   }
 }
 
+class UpdateAppDialog extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      dialogVisible: true,
+    };
+  }
+
+  componentDidMount() {
+  }
+
+  componentWillUnmount() {
+  }
+
+  _updateApp = () => {
+    Linking.openURL(this.props.update_app_address)
+  }
+
+  render() {
+    return (
+      <Dialog
+        visible={this.state.dialogVisible}
+        title="به‌روزرسانی"
+        titleStyle={styles.dialogTitle}
+        onTouchOutside={() => this.setState({ dialogVisible: this.props.forceUpdate })}
+        onRequestClose={() => this.props.forceUpdate ? BackHandler.exitApp() : this.setState({ dialogVisible: false })}
+      >
+        <View style={{
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <Text style={styles.dialogText}>
+            {this.props.update_app_message}
+          </Text>
+          <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
+            <TouchableOpacity
+              style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+              onPress={() => {
+                this._updateApp();
+                BackHandler.exitApp();
+              }
+              }
+            >
+              <Text style={styles.dialogButton}>به‌روزرسانی</Text>
+            </TouchableOpacity>
+            {this.props.forceUpdate ?
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                onPress={() => BackHandler.exitApp()}
+              >
+                <Text style={styles.dialogButton}>خروج</Text>
+              </TouchableOpacity>
+              :
+              <TouchableOpacity
+                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
+                onPress={() => this.setState({ dialogVisible: false })}
+              >
+                <Text style={styles.dialogButton}>بعداً</Text>
+              </TouchableOpacity>
+            }
+          </View>
+        </View>
+      </Dialog>);
+  }
+}
+
 class PartsScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -229,6 +305,8 @@ class PartsScreen extends React.Component {
       successfulLoad: false,
       dialogVisible: false,
       fontSizeS: 1,
+      updateDialogVisible: false,
+      forceUpdate: false
     };
   }
 
@@ -286,12 +364,22 @@ class PartsScreen extends React.Component {
     const relativeAddress = this.props.navigation.getParam('itemAddress', 'Null');
     fetchData(baseAddress + relativeAddress)
       .then(((parsedRes) => {
-        this.saveItems(parsedRes, relativeAddress);
-        this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
-        //If data length is 1, Suppose as readed
-        if (parsedRes.length === 1) {
-          this.saveItemId();
+        if (parsedRes.force_update != null) {
+          const schoolData = parsedRes;
+          AsyncStorage.setItem('schoolData', JSON.stringify(schoolData));
+          this.setState({
+            data: schoolData, isLoading: false, successfulLoad: true,
+            updateDialogVisible: true, forceUpdate: schoolData.force_update
+          });
         }
+        else {
+          this.saveItems(parsedRes, relativeAddress);
+          this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+          //If data length is 1, Suppose as readed
+          if (parsedRes.length === 1) {
+            this.saveItemId();
+          }
+      }
       }),
         ((rejectedRes) => {
           this.loadItems(relativeAddress)
@@ -385,6 +473,12 @@ class PartsScreen extends React.Component {
     else
       return (
         <View style={[styles.container]}>
+          {this.state.updateDialogVisible == true ? <UpdateAppDialog
+            forceUpdate={this.state.forceUpdate}
+            update_app_message={this.state.data.update_app_message}
+            update_app_address={this.state.data.update_app_address}
+          />
+          : null}
           <Dialog
             visible={this.state.dialogVisible}
             title="اندازه قلم"
@@ -464,6 +558,8 @@ class LessonsScreen extends React.Component {
       successfulLoad: false,
       testCount: 0,
       needUpdate: false,
+      updateDialogVisible: false,
+      forceUpdate:false,
     };
   }
 
@@ -562,9 +658,19 @@ class LessonsScreen extends React.Component {
     const relativeAddress = this.props.navigation.getParam('itemAddress', 'Null');
     fetchData(baseAddress + relativeAddress)
       .then(((parsedRes) => {
-        this.saveItems(parsedRes, relativeAddress);
-        this.showItems(parsedRes)
-        this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+        if (parsedRes.force_update != null) {
+          const schoolData = parsedRes;
+          AsyncStorage.setItem('schoolData', JSON.stringify(schoolData));
+          this.setState({
+            data: schoolData, isLoading: false, successfulLoad: true,
+            updateDialogVisible: true, forceUpdate: schoolData.force_update
+          });
+        }
+        else {
+          this.saveItems(parsedRes, relativeAddress);
+          this.showItems(parsedRes)
+          this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+        }
       }),
         ((rejectedRes) => {
           this.loadItems(relativeAddress)
@@ -665,6 +771,12 @@ class LessonsScreen extends React.Component {
       return (
         <View style={[styles.container, styles.lessonContainer]}>
           <StatusBar barStyle="light-content" backgroundColor="#468189" />
+          {this.state.updateDialogVisible == true ? <UpdateAppDialog
+            forceUpdate={this.state.forceUpdate}
+            update_app_message={this.state.data.update_app_message}
+            update_app_address={this.state.data.update_app_address}
+          /> 
+          :
           <ScrollView
             contentContainerStyle={styles.contentScrollView}
             refreshControl={
@@ -692,6 +804,7 @@ class LessonsScreen extends React.Component {
                 </View>
             }
           </ScrollView>
+        }
         </View>
       );
   }
@@ -901,14 +1014,24 @@ class HomeScreen extends React.Component {
   }
 
   loadData() {
-    this.setState({ isLoading: true });
+    this.setState({ isLoading: true, updateDialogVisible: false });
     const relativeAddress = masterRelativeAddress;
-    if (this.state.forceUpdate == false)
+    // if (this.state.forceUpdate == false)
       fetchData(baseAddress + relativeAddress)
         .then(((parsedRes) => {
-          this.saveItems(parsedRes, relativeAddress);
-          this.showItems(parsedRes)
-          this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+          if (parsedRes.force_update != null) {
+            const schoolData = parsedRes;
+            AsyncStorage.setItem('schoolData', JSON.stringify(schoolData));
+            this.setState({
+              schoolData: schoolData, isLoading: false, successfulLoad: true,
+              updateDialogVisible: true, forceUpdate: schoolData.force_update
+            });
+          }
+          else {
+            this.saveItems(parsedRes, relativeAddress);
+            this.showItems(parsedRes)
+            this.setState({ data: parsedRes, isLoading: false, successfulLoad: true })
+          }
         }),
           ((rejectedRes) => {
             this.loadItems(relativeAddress)
@@ -936,23 +1059,20 @@ class HomeScreen extends React.Component {
       { cancelable: false },
     )
   }
-  checkUpdate = () => {
-    const relativeAddress = checkUpdateRelativeAddress;
-    const currentAppVersion = VersionNumber.appVersion.toString()
+
+  getMasterRelativeAddresss = () => {
+    const relativeAddress = firstRelativeAddress;
     let findSlug = false;
     fetchData(baseAddress + relativeAddress)
       .then(((parsedRes) => {
-        for (let schoolData of parsedRes) {
-          if (schoolData.slug === 'CMP_SCH') {
-            findSlug = true;
-            masterRelativeAddress = schoolData.relative_address;
-            this.loadData();
-            if (schoolData.app_last_version > currentAppVersion) {
-              const forceUpdate = schoolData.app_support_version > currentAppVersion ? true : false;
-              AsyncStorage.setItem('schoolData', JSON.stringify(schoolData));
-              this.setState({ schoolData: schoolData, updateDialogVisible: true, forceUpdate: forceUpdate })
-            }
-          }
+        findSlug = true;
+        const schoolData = parsedRes;
+        masterRelativeAddress = schoolData.school_relative_address;
+        this.loadData();
+        AsyncStorage.setItem('schoolData', JSON.stringify(schoolData));
+        if (schoolData.norm_update) {
+          const forceUpdate = schoolData.force_update;
+          this.setState({ schoolData: schoolData, updateDialogVisible: true, forceUpdate: forceUpdate })
         }
         if (findSlug === false) {
           this.appDeprecated()
@@ -963,12 +1083,18 @@ class HomeScreen extends React.Component {
             .then((schoolData) => {
               if (schoolData != null) {
                 let schoolDataParsed = JSON.parse(schoolData);
-                const forceUpdate = schoolDataParsed.app_support_version > currentAppVersion ? true : false;
-                this.setState({ schoolData: schoolDataParsed, updateDialogVisible: true, forceUpdate: forceUpdate })
+                const forceUpdate = schoolDataParsed.force_update;
+                if(forceUpdate)
+                  this.setState({ schoolData: schoolDataParsed, updateDialogVisible: forceUpdate, forceUpdate: forceUpdate });
+                else {
+                  masterRelativeAddress = schoolDataParsed.school_relative_address;
+                  this.loadData();
+                }
               }
               else {
                 this.appDeprecated()
               }
+              // Alert.alert(rejectedRes.toString())
             });
           // Alert.alert(rejectedRes)
         })
@@ -1016,7 +1142,7 @@ class HomeScreen extends React.Component {
   }
 
   componentDidMount() {
-    this.checkUpdate();
+    this.getMasterRelativeAddresss();
     //this.loadData();
     this.loadCoursesId();
     this.updateChangesOnFocus();
@@ -1070,60 +1196,19 @@ class HomeScreen extends React.Component {
     AsyncStorage.removeItem('fontSizeStored');
   }
 
-  _updateApp = () => {
-    Linking.openURL(this.state.schoolData.app_address)
-  }
-
   render() {
     const successfulLoad = this.state.successfulLoad;
     const isLoading = this.state.isLoading;
 
     return (
       <View style={styles.container}>
-        <Dialog
-          visible={this.state.updateDialogVisible}
-          title="به‌روزرسانی"
-          titleStyle={styles.dialogTitle}
-          onTouchOutside={() => this.setState({ updateDialogVisible: this.state.forceUpdate })}
-          onRequestClose={() => this.state.forceUpdate ? BackHandler.exitApp() : this.setState({ updateDialogVisible: false })}
-        >
-          <View style={{
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            <Text style={styles.dialogText}>
-              {this.state.schoolData.app_update_message}
-            </Text>
-            <View style={{ flexDirection: 'row', alignSelf: 'flex-end' }}>
-              <TouchableOpacity
-                style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                onPress={() => {
-                  this._updateApp();
-                  BackHandler.exitApp();
-                  //this.setState({ updateDialogVisible: false })
-                }
-                }
-              >
-                <Text style={styles.dialogButton}>به‌روزرسانی</Text>
-              </TouchableOpacity>
-              {this.state.forceUpdate ?
-                <TouchableOpacity
-                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                  onPress={() => BackHandler.exitApp()}
-                >
-                  <Text style={styles.dialogButton}>خروج</Text>
-                </TouchableOpacity>
-                :
-                <TouchableOpacity
-                  style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
-                  onPress={() => this.setState({ updateDialogVisible: false })}
-                >
-                  <Text style={styles.dialogButton}>بعداً</Text>
-                </TouchableOpacity>
-              }
-            </View>
-          </View>
-        </Dialog>
+        {this.state.updateDialogVisible == true ? 
+        <UpdateAppDialog
+          forceUpdate={this.state.forceUpdate}
+          update_app_message={this.state.schoolData.update_app_message}
+          update_app_address={this.state.schoolData.update_app_address}
+        /> : null
+        }
         <Dialog
           visible={this.state.resetCoursesDialogVisible}
           title="شروع درس‌ها از اول"
@@ -1194,7 +1279,7 @@ class HomeScreen extends React.Component {
             justifyContent: "center",
           }}>
             <Text style={styles.dialogText}>
-              این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد
+              این برنامه توسط تیم لرنینو تهیه و انتشار داده شده است. لرنینو به دنبال تحول در‌ آموزش و ساده کردن آن است. ما اعتقاد داریم باید از آموزش لذت برد.
                     </Text>
             <TouchableOpacity
               style={{ justifyContent: 'flex-start', alignSelf: 'flex-end' }}
